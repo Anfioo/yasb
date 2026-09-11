@@ -799,11 +799,11 @@ class BarContextMenu:
         self._menu.aboutToHide.connect(self._on_menu_about_to_hide)
 
         # Bar info
-        bar_info = self._menu.addAction(f"Bar: {self._bar_name}")
+        bar_info = self._menu.addAction(f"栏: {self._bar_name}")
         bar_info.setEnabled(False)
 
         # Widgets menu
-        widgets_menu = self._menu.addMenu("Active Widgets")
+        widgets_menu = self._menu.addMenu("活动组件")
         apply_qmenu_style(widgets_menu)
         widgets_menu.setProperty(
             "class", "context-menu submenu dark" if GlobalState.is_dark() else "context-menu submenu"
@@ -813,11 +813,11 @@ class BarContextMenu:
         self._menu.addSeparator()
 
         # System actions
-        task_manager = self._menu.addAction("Task Manager")
+        task_manager = self._menu.addAction("任务管理器")
         task_manager.triggered.connect(self._open_task_manager)
 
         # Screenshot action
-        screenshot_action = self._menu.addAction("Take Screenshot")
+        screenshot_action = self._menu.addAction("截图")
         screenshot_action.triggered.connect(self._take_screenshot)
 
         self._menu.addSeparator()
@@ -830,17 +830,17 @@ class BarContextMenu:
         )
 
         if not current_autohide_enabled:
-            enable_autohide = self._menu.addAction("Enable Auto Hide")
+            enable_autohide = self._menu.addAction("启用自动隐藏")
             enable_autohide.triggered.connect(self._enable_autohide)
         else:
-            disable_autohide = self._menu.addAction("Disable Auto Hide")
+            disable_autohide = self._menu.addAction("禁用自动隐藏")
             disable_autohide.triggered.connect(self._disable_autohide)
 
-        reload_action = self._menu.addAction("Reload Bar")
-        reload_action.triggered.connect(partial(reload_application, "Reloading Bar from context menu..."))
+        reload_action = self._menu.addAction("重载栏")
+        reload_action.triggered.connect(partial(reload_application, "正在从右键菜单重载栏..."))
 
-        exit_action = self._menu.addAction("Exit")
-        exit_action.triggered.connect(partial(exit_application, "Exiting Application from context menu..."))
+        exit_action = self._menu.addAction("退出")
+        exit_action.triggered.connect(partial(exit_application, "正在从右键菜单退出应用..."))
 
         self._menu.popup(self.parent.mapToGlobal(position))
         self._menu.activateWindow()
@@ -863,13 +863,14 @@ class BarContextMenu:
 
     def _populate_widgets_menu(self, widgets_menu):
         if not any(self._widgets.get(layout) for layout in ["left", "center", "right"]):
-            no_widgets = widgets_menu.addAction("No active widgets")
+            no_widgets = widgets_menu.addAction("没有活动的组件")
             no_widgets.setEnabled(False)
             return
 
         for i, layout_type in enumerate(["left", "center", "right"]):
             # Layout header
-            layout_header = widgets_menu.addAction(f"{layout_type.title()} Layout")
+            layout_names = {"left": "左侧", "center": "中间", "right": "右侧"}
+            layout_header = widgets_menu.addAction(f"{layout_names.get(layout_type, layout_type.title())} 布局")
             layout_header.setEnabled(False)
 
             # Add widgets or empty message
@@ -877,7 +878,7 @@ class BarContextMenu:
                 for widget in self._widgets[layout_type]:
                     self._add_widget_checkbox(widgets_menu, widget)
             else:
-                no_widgets = widgets_menu.addAction("  No active widgets")
+                no_widgets = widgets_menu.addAction("  没有活动的组件")
                 no_widgets.setEnabled(False)
             # Add separator after each layout except the last one
             if i < 2:
