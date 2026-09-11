@@ -225,7 +225,7 @@ class UsageChartWidget(QFrame):
             self._tooltip = CustomToolTip()
             self._tooltip._position = "top"
 
-        self._tooltip.label.setText(f"{formatted}\n{item.get('credits', 0.0):.2f} credits")
+        self._tooltip.label.setText(f"{formatted}\n{item.get('credits', 0.0):.2f} 额度")
         self._tooltip.adjustSize()
         pos = self.mapToGlobal(self._points[idx].toPoint())
 
@@ -392,7 +392,7 @@ class CopilotWidget(BaseWidget):
 
         now = datetime.now(UTC)
         next_reset = datetime(now.year + 1, 1, 1) if now.month == 12 else datetime(now.year, now.month + 1, 1)
-        reset_date_str = next_reset.strftime("%b %d")
+        reset_date_str = next_reset.strftime("%m月%d日")
 
         label_options = {
             "{icon}": self.config.icons.copilot,
@@ -423,7 +423,7 @@ class CopilotWidget(BaseWidget):
             if pct >= self.config.thresholds.warning
             else ""
         )
-        tip = f"Error: {data.error}" if data.error else f"Copilot: {used:.2f}/{allowance} ({pct}%)"
+        tip = f"错误：{data.error}" if data.error else f"Copilot：{used:.2f}/{allowance}（{pct}%）"
 
         for widget in active_widgets:
             if self.config.tooltip:
@@ -478,7 +478,7 @@ class CopilotWidget(BaseWidget):
         icon_lbl = QLabel(self.config.icons.copilot)
         icon_lbl.setProperty("class", "empty-icon")
 
-        msg = QLabel("Loading usage data...")
+        msg = QLabel("正在加载用量数据...")
         msg.setProperty("class", "empty-message")
 
         center = QVBoxLayout()
@@ -505,14 +505,14 @@ class CopilotWidget(BaseWidget):
         # Title row with reset date on right
         title_row = QHBoxLayout()
         title_row.setContentsMargins(0, 0, 0, 0)
-        title = QLabel("AI Credits")
+        title = QLabel("AI 额度")
         title.setProperty("class", "section-title")
         title_row.addWidget(title)
         title_row.addStretch()
 
         now = datetime.now(UTC)
         next_reset = datetime(now.year + 1, 1, 1) if now.month == 12 else datetime(now.year, now.month + 1, 1)
-        reset_lbl = QLabel(f"Resets on {next_reset.strftime('%b %d')}")
+        reset_lbl = QLabel(f"重置于 {next_reset.strftime('%m月%d日')}")
         reset_lbl.setProperty("class", "reset-date")
         title_row.addWidget(reset_lbl)
         layout.addLayout(title_row)
@@ -545,15 +545,15 @@ class CopilotWidget(BaseWidget):
         layout.setContentsMargins(12, 12, 12, 12)
         layout.setSpacing(8)
 
-        title = QLabel("Spending This Month")
+        title = QLabel("本月支出")
         title.setProperty("class", "section-title")
         layout.addWidget(title)
 
         overage = max(0.0, data.total_credits - data.allowance)
 
-        layout.addWidget(self._stat_row("Included:", f"{min(data.total_credits, data.allowance):.2f} credits"))
-        layout.addWidget(self._stat_row("Overage:", f"{overage:.2f} credits (${overage * 0.01:.2f})"))
-        total_row = self._stat_row("Total Cost:", f"${data.total_cost:.2f}")
+        layout.addWidget(self._stat_row("包含：", f"{min(data.total_credits, data.allowance):.2f} 额度"))
+        layout.addWidget(self._stat_row("超额：", f"{overage:.2f} 额度（${overage * 0.01:.2f}）"))
+        total_row = self._stat_row("总费用：", f"${data.total_cost:.2f}")
         total_row.setProperty("class", "stat-row total")
         layout.addWidget(total_row)
 
@@ -583,7 +583,7 @@ class CopilotWidget(BaseWidget):
         layout.setContentsMargins(12, 12, 12, 12)
         layout.setSpacing(8)
 
-        title = QLabel("Usage by Model")
+        title = QLabel("按模型用量")
         title.setProperty("class", "section-title")
         layout.addWidget(title)
 
@@ -624,7 +624,7 @@ class CopilotWidget(BaseWidget):
         layout.setContentsMargins(12, 12, 12, 12)
         layout.setSpacing(8)
 
-        title = QLabel("Daily Usage")
+        title = QLabel("每日用量")
         title.setProperty("class", "section-title")
         layout.addWidget(title)
 
