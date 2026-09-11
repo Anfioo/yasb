@@ -21,10 +21,10 @@ BASE_WIDGET: dict = {
                 "options": {
                     "label": "<span>\ue8a9</span>",
                     "menu_list": [
-                        {"title": "User Home", "path": "~"},
-                        {"title": "Download", "path": "~\\Downloads"},
-                        {"title": "Documents", "path": "~\\Documents"},
-                        {"title": "Pictures", "path": "~\\Pictures"},
+                        {"title": "用户主页", "path": "~"},
+                        {"title": "下载", "path": "~\\Downloads"},
+                        {"title": "文档", "path": "~\\Documents"},
+                        {"title": "图片", "path": "~\\Pictures"},
                     ],
                     "system_menu": True,
                     "power_menu": True,
@@ -92,7 +92,7 @@ BASE_WIDGET: dict = {
                 "type": "yasb.notifications.NotificationsWidget",
                 "options": {
                     "label": "<span>\uf2a5</span>",
-                    "label_alt": "{count} notifications",
+                    "label_alt": "{count} 个通知",
                     "hide_empty": True,
                     "tooltip": False,
                     "callbacks": {
@@ -119,13 +119,13 @@ BASE_WIDGET: dict = {
                     },
                     "profile_image_size": 64,
                     "buttons": {
-                        "lock": ["\udb80\udf41", "Lock"],
-                        "signout": ["\udb80\udf43", "Sign out"],
-                        "sleep": ["\udb82\udd04", "Sleep"],
-                        "hibernate": ["\udb82\udd01", "Hibernate"],
-                        "restart": ["\udb81\udc53", "Restart"],
-                        "shutdown": ["\udb82\udd06", "Shut Down"],
-                        "cancel": ["", "Cancel"],
+                        "lock": ["\udb80\udf41", "锁定"],
+                        "signout": ["\udb80\udf43", "注销"],
+                        "sleep": ["\udb82\udd04", "睡眠"],
+                        "hibernate": ["\udb82\udd01", "休眠"],
+                        "restart": ["\udb81\udc53", "重启"],
+                        "shutdown": ["\udb82\udd06", "关机"],
+                        "cancel": ["", "取消"],
                     },
                 },
             },
@@ -235,7 +235,7 @@ MEMORY_WIDGET: dict = {
                 "type": "yasb.memory.MemoryWidget",
                 "options": {
                     "label": "<span>\ue9d9</span> {virtual_mem_free}",
-                    "label_alt": "<span>\uefc5</span> VIRT: {virtual_mem_percent}% SWAP: {swap_mem_percent}%",
+                    "label_alt": "<span>\uefc5</span> 虚拟: {virtual_mem_percent}% 交换: {swap_mem_percent}%",
                     "update_interval": 5000,
                     "hide_decimal": True,
                     "callbacks": {
@@ -266,7 +266,7 @@ QUICK_LAUNCH_WIDGET: dict = {
                 "type": "yasb.quick_launch.QuickLaunchWidget",
                 "options": {
                     "label": "<span>\ue71e</span>",
-                    "search_placeholder": "Search applications...",
+                    "search_placeholder": "搜索应用程序...",
                     "max_results": 30,
                     "show_icons": True,
                     "icon_size": 16,
@@ -376,7 +376,7 @@ WEATHER_WIDGET: dict = {
                 "type": "yasb.open_meteo.OpenMeteoWidget",
                 "options": {
                     "label": "<span>\ue706</span>{temp}",
-                    "label_alt": "{location}: Min {min_temp}, Max {max_temp}, Humidity {humidity}",
+                    "label_alt": "{location}: 最低 {min_temp}，最高 {max_temp}，湿度 {humidity}",
                     "tooltip": True,
                     "update_interval": 600,
                     "hide_decimal": True,
@@ -432,7 +432,7 @@ GITHUB_WIDGET: dict = {
                 "type": "yasb.github.GithubWidget",
                 "options": {
                     "label": "<span>\ueba1</span>",
-                    "label_alt": "Notifications {data}",
+                    "label_alt": "通知 {data}",
                     "max_notification": 50,
                     "notification_dot": {
                         "enabled": True,
