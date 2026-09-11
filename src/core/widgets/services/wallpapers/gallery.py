@@ -127,14 +127,14 @@ class GalleryWindow(QMainWindow):
         apply_qmenu_style(menu)
         menu.setProperty("class", "context-menu")
 
-        action_all = menu.addAction("Set on all screens")
+        action_all = menu.addAction("设置到所有屏幕")
         action_all.triggered.connect(lambda: self.apply_wallpaper(image_path, None))
 
         monitor_ids = WallpaperManager().get_monitor_ids()
         if len(monitor_ids) > 1:
             menu.addSeparator()
             for position, monitor_id in enumerate(monitor_ids):
-                action = menu.addAction(f"Set on screen {position + 1}")
+                action = menu.addAction(f"设置到屏幕 {position + 1}")
                 action.triggered.connect(partial(self.apply_wallpaper, image_path, monitor_id))
 
         self._menu_open = True
@@ -299,7 +299,7 @@ class CardsView(QWidget):
 
         if not gallery.image_files:
             if not gallery.scanning:
-                self.draw_notice("No wallpapers found in\n" + "\n".join(gallery.image_paths), painter)
+                self.draw_notice("未找到壁纸：\n" + "\n".join(gallery.image_paths), painter)
             painter.end()
             return
 
