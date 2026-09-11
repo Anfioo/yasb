@@ -358,7 +358,7 @@ class ColorSwatchButton(_ColorChip):
     def __init__(self, color: str | QColor = _DEFAULT_COLOR, parent: QWidget | None = None):
         super().__init__(color, size=18, parent=parent)
         self._host = _PopupToggleHost(self)
-        set_tooltip(self, "Color")
+        set_tooltip(self, "颜色")
         self.clicked.connect(self._toggle_popup)
 
     def set_color(self, color: QColor | str) -> None:
@@ -995,7 +995,7 @@ class ScreenshotEditorDialog(ViewBase, QDialog):
         self._zoom_auto = True
         self._applying_auto_zoom = False
 
-        self.setWindowTitle("Edit Screenshot")
+        self.setWindowTitle("编辑截图")
         self.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint, False)
         self.setWindowFlag(Qt.WindowType.Window, True)
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
@@ -1041,13 +1041,13 @@ class ScreenshotEditorDialog(ViewBase, QDialog):
         self._tool_group = QButtonGroup(self)
         self._tool_group.setExclusive(True)
         for key, tip in (
-            ("pen", "Pen"),
-            ("highlight", "Highlighter"),
-            ("arrow", "Arrow"),
-            ("rect", "Rectangle"),
-            ("circle", "Circle"),
-            ("blur", "Blur"),
-            ("crop", "Crop"),
+            ("pen", "画笔"),
+            ("highlight", "荧光笔"),
+            ("arrow", "箭头"),
+            ("rect", "矩形"),
+            ("circle", "圆形"),
+            ("blur", "模糊"),
+            ("crop", "裁剪"),
         ):
             b = self._make_icon_button(self._tool_svgs[key], tip, checkable=True)
             b.clicked.connect(lambda _=False, k=key: self._on_tool_clicked(k))
@@ -1067,28 +1067,28 @@ class ScreenshotEditorDialog(ViewBase, QDialog):
         self._zoom.setMaximumWidth(180)
         self._zoom.valueChanged.connect(self._on_zoom)
         self._zoom.labelClicked.connect(self._reset_zoom)
-        set_tooltip(self._zoom, "Zoom (Ctrl+scroll)")
+        set_tooltip(self._zoom, "缩放（Ctrl+滚轮）")
         bar.addWidget(self._zoom)
 
         bar.addStretch(1)
 
-        self._btn_undo = self._make_icon_button(SVG_UNDO, "Undo (Ctrl+Z)")
+        self._btn_undo = self._make_icon_button(SVG_UNDO, "撤销（Ctrl+Z）")
         self._btn_undo.clicked.connect(self._canvas.undo)
         bar.addWidget(self._btn_undo)
 
-        self._btn_redo = self._make_icon_button(SVG_REDO, "Redo (Ctrl+Y)")
+        self._btn_redo = self._make_icon_button(SVG_REDO, "重做（Ctrl+Y）")
         self._btn_redo.clicked.connect(self._canvas.redo)
         bar.addWidget(self._btn_redo)
 
-        self._btn_clear = self._make_icon_button(SVG_CLEAR_ALL, "Clear all edits")
+        self._btn_clear = self._make_icon_button(SVG_CLEAR_ALL, "清除所有编辑")
         self._btn_clear.clicked.connect(self._canvas.clear_all)
         bar.addWidget(self._btn_clear)
 
-        self._btn_copy = self._make_icon_button(SVG_COPY, "Copy to clipboard")
+        self._btn_copy = self._make_icon_button(SVG_COPY, "复制到剪贴板")
         self._btn_copy.clicked.connect(self._copy)
         bar.addWidget(self._btn_copy)
 
-        self._btn_save = self._make_icon_button(SVG_SAVE, "Save as")
+        self._btn_save = self._make_icon_button(SVG_SAVE, "另存为")
         self._btn_save.clicked.connect(self._save)
         bar.addWidget(self._btn_save)
 
@@ -1115,7 +1115,7 @@ class ScreenshotEditorDialog(ViewBase, QDialog):
 
     def _update_title(self) -> None:
         sz = self._canvas.image_size()
-        self.setWindowTitle(f"Edit Screenshot - {sz.width()} x {sz.height()}")
+        self.setWindowTitle(f"编辑截图 - {sz.width()} x {sz.height()}")
 
     def _icon_dpr(self) -> float:
         return float(self.devicePixelRatioF())
@@ -1188,7 +1188,7 @@ class ScreenshotEditorDialog(ViewBase, QDialog):
                     self._canvas.blur_strength,
                     minimum=_MIN_BLUR,
                     maximum=_MAX_BLUR,
-                    label="Blur",
+                    label="模糊",
                     suffix="",
                     parent=self,
                 )
@@ -1202,7 +1202,7 @@ class ScreenshotEditorDialog(ViewBase, QDialog):
                     self._canvas.stroke_width,
                     minimum=_MIN_STROKE,
                     maximum=_MAX_STROKE,
-                    label="Size",
+                    label="大小",
                     suffix="px",
                     parent=self,
                 )
