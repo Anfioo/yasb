@@ -92,11 +92,11 @@ class ContentDialog(QWidget):
 
         dlg = ContentDialog(
             parent=parent_widget,
-            title="Save your work?",
-            content="Unsaved changes will be lost.",
-            primary_button_text="Save",
-            secondary_button_text="Don't Save",
-            close_button_text="Cancel",
+            title="保存当前更改？",
+            content="未保存的更改将丢失。",
+            primary_button_text="保存",
+            secondary_button_text="不保存",
+            close_button_text="取消",
             default_button=ContentDialogButton.PRIMARY,
         )
         dlg.primary_button_click.connect(on_save)

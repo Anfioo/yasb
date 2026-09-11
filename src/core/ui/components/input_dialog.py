@@ -96,11 +96,11 @@ class InputDialog(QWidget):
 
         dlg = InputDialog(
             parent=self,
-            title="Rename",
-            content="Enter a new name.",
+            title="重命名",
+            content="请输入新名称。",
             text="current value",
-            primary_button_text="Save",
-            close_button_text="Cancel",
+            primary_button_text="保存",
+            close_button_text="取消",
         )
         dlg.accepted.connect(lambda text: print(text))
         dlg.show_dialog()
@@ -115,8 +115,8 @@ class InputDialog(QWidget):
         content: str = "",
         text: str = "",
         placeholder: str = "",
-        primary_button_text: str = "OK",
-        close_button_text: str = "Cancel",
+        primary_button_text: str = "确定",
+        close_button_text: str = "取消",
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(
