@@ -104,7 +104,7 @@ class BluetoothItem(QFrame):
         actions = QHBoxLayout(self._actions)
         actions.setContentsMargins(0, 0, 0, 0)
         actions.setSpacing(0)
-        self.connect_button = QPushButton("Connect", self._actions)
+        self.connect_button = QPushButton("连接", self._actions)
         self.connect_button.setProperty("class", "connect")
         self.connect_button.clicked.connect(self._on_action_clicked)
         actions.addStretch(1)
@@ -517,10 +517,10 @@ class BluetoothMenu(QObject):
             self._apply_list()
             return
         if status == ScanResultStatus.API_UNAVAILABLE:
-            self._show_error("Bluetooth API unavailable")
+            self._show_error("蓝牙 API 不可用")
             return
         if status == ScanResultStatus.ERROR:
-            self._show_error("Failed to scan for devices")
+            self._show_error("扫描设备失败")
             return
 
         self._set_radio_ui(True)
@@ -566,7 +566,7 @@ class BluetoothMenu(QObject):
         if not is_valid_qobject(self.popup) or not self.popup.isVisible():
             return
         self._stop_loader()
-        self._show_error(message or "Bluetooth refresh failed")
+        self._show_error(message or "蓝牙刷新失败")
 
     @pyqtSlot(object)
     def _connect(self, device: DeviceInfo):
@@ -608,7 +608,7 @@ class BluetoothMenu(QObject):
         if not self.manager.set_radio(checked):
             self._set_radio_ui(not checked)
             self._stop_loader()
-            self._show_error("Unable to change Bluetooth power")
+            self._show_error("无法更改蓝牙电源")
             return
 
     def _decorate(self, device: DeviceInfo) -> DeviceInfo:
