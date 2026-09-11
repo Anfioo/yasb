@@ -24,7 +24,7 @@ class PowerPlanWidget(BaseWidget):
 
         self._plans: list[PowerPlanInfo] = []
         self._active_guid: GUID | None = None
-        self._active_plan_name: str = "Unknown"
+        self._active_plan_name: str = "未知"
         self._plan_class_name: str = "unknown"
 
         self._event_service = EventService()
@@ -65,7 +65,7 @@ class PowerPlanWidget(BaseWidget):
 
         self._plans = plans
         self._active_guid = active_guid
-        self._active_plan_name = "Unknown"
+        self._active_plan_name = "未知"
         self._plan_class_name = "unknown"
 
         if active_guid:

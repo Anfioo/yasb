@@ -53,20 +53,20 @@ class BatteryWidget(BaseWidget):
 
     def _get_time_remaining(self) -> str:
         if not self._battery_state:
-            return "unknown"
+            return "未知"
 
         secs_left = self._battery_state.time_remaining
         if secs_left == POWER_TIME_UNLIMITED:
             time_left = self.config.time_remaining_unlimited_icon
         elif secs_left == POWER_TIME_UNKNOWN:
-            time_left = "unknown"
+            time_left = "未知"
         elif secs_left >= 0:
             time_left_delta = timedelta(seconds=secs_left)
             time_left = (
                 humanize.naturaldelta(time_left_delta) if self.config.time_remaining_natural else str(time_left_delta)
             )
         else:
-            time_left = "unknown"
+            time_left = "未知"
         return time_left
 
     def _get_battery_state(self) -> BatteryData | None:
@@ -138,7 +138,7 @@ class BatteryWidget(BaseWidget):
                 if widget_index < len(active_widgets):
                     if "<span" in part and "</span>" in part:
                         active_widgets[widget_index].hide()
-                    active_widgets[widget_index].setText("Battery info not available")
+                    active_widgets[widget_index].setText("电池信息不可用")
                     widget_index += 1
             return
 
