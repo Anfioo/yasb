@@ -170,7 +170,7 @@ class LibreHardwareMonitorWidget(BaseWidget):
                 value_label.setText(f"{value:.{self.config.libre_menu.precision}f} {unit}")
             else:
                 # Sensor missing or not found
-                value_label.setText("N/A")
+                value_label.setText("暂无")
         reply.deleteLater()
 
     def _is_menu_visible(self):
@@ -255,7 +255,7 @@ class LibreHardwareMonitorWidget(BaseWidget):
             bytes_string = reply.readAll().data()
             self._data = json.loads(bytes_string.decode("utf-8"))
             if self._data.get("result") == "ok":
-                self._data["status"] = "Connected..."
+                self._data["status"] = "已连接..."
             else:
                 self._data["status"] = self.config.sensor_id_error_label
                 self._data["histogram"] = self.config.sensor_id_error_label
