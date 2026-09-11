@@ -493,7 +493,7 @@ class _DiskSearchBackend:
     def search(self, query: str, max_results: int = 20, cancel_event=None) -> list[dict]:
         if not self._available:
             return []
-        # Parse drive/path prefix: "d: foo", "d:\ foo", "c:\users\ bar"
+        # Parse drive/path prefix: "d: foo", "d:\\ foo", "c:\\users\\ bar"
         search_dir = None
         drive_only = re.match(r"^([a-zA-Z]):[\\/]?\s+(.+)$", query)
         path_prefix = re.match(r"^([a-zA-Z]:\\(?:[^\\/]+\\)*)\s+(.+)$", query)
@@ -611,8 +611,8 @@ class FileSearchProvider(BaseProvider):
     """Search files and folders using Everything, Windows Search, or full disk search."""
 
     name = "file_search"
-    display_name = "File Search"
-    input_placeholder = "Search files and folders..."
+    display_name = "文件搜索"
+    input_placeholder = "搜索文件和文件夹..."
     icon = ICON_SEARCH
 
     def __init__(self, config: dict | None = None):
@@ -678,8 +678,8 @@ class FileSearchProvider(BaseProvider):
             )
             return [
                 ProviderResult(
-                    title="Search files and folders",
-                    description=f"Backend: {backend_label}",
+                    title="搜索文件和文件夹",
+                    description=f"后端：{backend_label}",
                     icon_char=ICON_SEARCH,
                     provider=self.name,
                 )
@@ -692,8 +692,8 @@ class FileSearchProvider(BaseProvider):
                 return self._everything_not_running_results()
             return [
                 ProviderResult(
-                    title="No search backend available",
-                    description="Install Everything or enable Windows Search indexer",
+                    title="没有可用的搜索后端",
+                    description="请安装 Everything 或启用 Windows 搜索索引器",
                     icon_char=ICON_SEARCH,
                     provider=self.name,
                 )
@@ -744,12 +744,12 @@ class FileSearchProvider(BaseProvider):
         try:
             st = os.stat(path)
             if not is_folder:
-                metadata.append(["File Size", _format_size(st.st_size) or _format_size(size)])
-            metadata.append(["Created", datetime.datetime.fromtimestamp(st.st_ctime).strftime("%Y-%m-%d %H:%M")])
-            metadata.append(["Last Modified", datetime.datetime.fromtimestamp(st.st_mtime).strftime("%Y-%m-%d %H:%M")])
+                metadata.append(["文件大小", _format_size(st.st_size) or _format_size(size)])
+            metadata.append(["创建时间", datetime.datetime.fromtimestamp(st.st_ctime).strftime("%Y-%m-%d %H:%M")])
+            metadata.append(["修改时间", datetime.datetime.fromtimestamp(st.st_mtime).strftime("%Y-%m-%d %H:%M")])
         except OSError:
             if size and not is_folder:
-                metadata.append(["File Size", _format_size(size)])
+                metadata.append(["文件大小", _format_size(size)])
         return {
             "kind": "text",
             "icon": _get_file_icon(name, is_folder),
@@ -784,12 +784,12 @@ class FileSearchProvider(BaseProvider):
             return []
 
         actions = [
-            ProviderMenuAction(id="reveal_in_explorer", label="Reveal in Explorer"),
-            ProviderMenuAction(id="copy_path", label="Copy path"),
+            ProviderMenuAction(id="reveal_in_explorer", label="在资源管理器中显示"),
+            ProviderMenuAction(id="copy_path", label="复制路径"),
         ]
 
         if not bool(result.action_data.get("is_folder", False)):
-            actions.append(ProviderMenuAction(id="copy_file", label="Copy file"))
+            actions.append(ProviderMenuAction(id="copy_file", label="复制文件"))
 
         return actions
 
@@ -909,8 +909,8 @@ class FileSearchProvider(BaseProvider):
         if exe:
             return [
                 ProviderResult(
-                    title="Everything is not running",
-                    description="Click to launch Everything",
+                    title="Everything 未运行",
+                    description="点击启动 Everything",
                     icon_char=ICON_WARNING,
                     provider=self.name,
                     action_data={"action": "launch_everything"},
@@ -918,8 +918,8 @@ class FileSearchProvider(BaseProvider):
             ]
         return [
             ProviderResult(
-                title="Everything is not installed",
-                description="Click to download from voidtools.com",
+                title="Everything 未安装",
+                description="点击从 voidtools.com 下载",
                 icon_char=ICON_WARNING,
                 provider=self.name,
                 action_data={"action": "install_everything"},
