@@ -54,7 +54,7 @@ def write_message(handle: int, msg_dict: dict[str, str]):
     try:
         data = json.dumps(msg_dict).encode("utf-8")
     except Exception as e:
-        print(f"JSON encode error: {e}")
+        print(f"JSON 编码错误：{e}")
         print(f"Data: {msg_dict}")
         return False
     success = WriteFile(handle, data)
@@ -79,7 +79,7 @@ def read_message(handle: int) -> dict[str, str] | None:
                 return json_object
         return {"type": "DATA", "data": "\n".join(messages)}
     except json.JSONDecodeError as e:
-        print(f"JSON decode error: {e}")
+        print(f"JSON 解码错误：{e}")
         print(f"Data: {data}")
         return None
 
@@ -103,7 +103,7 @@ class CustomArgumentParser(argparse.ArgumentParser):
         super().__init__(*args, **kwargs)
 
     def error(self, message: str):
-        print(f"\n{Format.red}Error:{Format.reset} {message}\n")
+        print(f"\n{Format.red}错误:{Format.reset} {message}\n")
         sys.exit(2)
 
 
@@ -141,30 +141,30 @@ class CLIHandler:
                 None,
             )
             if pipe_handle == INVALID_HANDLE_VALUE:
-                print("Failed to connect to YASB. Pipe not found. It may not be running.")
+                print("无法连接到 YASB。未找到管道，程序可能未在运行。")
                 return
 
             # Send the command as bytes
             command_bytes = command.encode("utf-8")
             success = WriteFile(pipe_handle, command_bytes)
             if not success:
-                print(f"Failed to write command. Err: {GetLastError()}")
+                print(f"写入命令失败。错误码：{GetLastError()}")
                 CloseHandle(pipe_handle)
                 return
 
             success, response = ReadFile(pipe_handle, 64 * 1024)
             if not success or len(response) == 0:
-                print(f"Failed to read response. Err: {GetLastError()}")
+                print(f"读取响应失败。错误码：{GetLastError()}")
                 CloseHandle(pipe_handle)
                 return
 
             response_text = response.decode("utf-8").strip()
             if response_text != "ACK":
-                print(f"Received unexpected response: {response_text}")
+                print(f"收到意外响应：{response_text}")
 
             CloseHandle(pipe_handle)
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"错误：{e}")
 
     def _open_startup_registry(self, access_flag: int):
         """Helper function to open the startup registry key."""
@@ -180,210 +180,210 @@ class CLIHandler:
         except FileNotFoundError:
             return False
         except Exception as e:
-            print(f"Failed to check startup status for {app_name}: {e}")
+            print(f"检查 {app_name} 的开机自启状态失败：{e}")
             return False
 
     def enable_startup(self):
         if self.is_autostart_enabled(APP_NAME):
-            print(f"{APP_NAME} is already set to start on boot.")
+            print(f"{APP_NAME} 已设置为开机自启。")
             return
         try:
             with self._open_startup_registry(winreg.KEY_SET_VALUE) as key:
                 winreg.SetValueEx(key, APP_NAME, 0, winreg.REG_SZ, f"{AUTOSTART_FILE}")
-            print(f"{APP_NAME} added to startup.")
+            print(f"{APP_NAME} 已添加到开机自启。")
         except Exception as e:
-            print(f"Failed to add {APP_NAME} to startup: {e}")
+            print(f"添加 {APP_NAME} 到开机自启失败：{e}")
 
     def disable_startup(self):
         try:
             with self._open_startup_registry(winreg.KEY_ALL_ACCESS) as key:
                 winreg.DeleteValue(key, APP_NAME)
-            print(f"{APP_NAME} removed from startup.")
+            print(f"{APP_NAME} 已从开机自启中移除。")
         except FileNotFoundError:
-            print(f"Startup entry for {APP_NAME} not found.")
+            print(f"未找到 {APP_NAME} 的开机自启项。")
         except Exception as e:
-            print(f"Failed to remove {APP_NAME} from startup: {e}")
+            print(f"移除 {APP_NAME} 的开机自启失败：{e}")
 
     def parse_arguments(self):
         parser = CustomArgumentParser(
-            description="The command-line interface for YASB Reborn.",
+            description="YASB Reborn 的命令行界面。",
             add_help=False,
             prog="yasbc",
         )
         subparsers = parser.add_subparsers(
             dest="command",
-            help="Commands",
+            help="命令",
         )
 
         start_parser = subparsers.add_parser(
             "start",
-            help="Start the application",
+            help="启动应用",
             prog="yasbc start",
         )
         start_parser.add_argument(
             "-s",
             "--silent",
             action="store_true",
-            help="Silence print messages",
+            help="静默输出消息",
         )
 
         stop_parser = subparsers.add_parser(
             "stop",
-            help="Stop the application",
+            help="停止应用",
             prog="yasbc stop",
         )
         stop_parser.add_argument(
             "-s",
             "--silent",
             action="store_true",
-            help="Silence print messages",
+            help="静默输出消息",
         )
         stop_parser.add_argument(
             "-f",
             "--force",
             action="store_true",
-            help="Force stop the application",
+            help="强制停止应用",
         )
 
         reload_parser = subparsers.add_parser(
             "reload",
-            help="Reload the application",
+            help="重载应用",
             prog="yasbc reload",
         )
         reload_parser.add_argument(
             "-s",
             "--silent",
             action="store_true",
-            help="Silence print messages",
+            help="静默输出消息",
         )
 
         subparsers.add_parser(
             "update",
-            help="Update the application",
+            help="更新应用",
             add_help=False,
         )
 
         enable_autostart_parser = subparsers.add_parser(
             "enable-autostart",
-            help="Enable autostart on system boot",
+            help="启用开机自启",
             prog="yasbc enable-autostart",
         )
         enable_autostart_parser.add_argument(
             "--task",
             action="store_true",
-            help="Enable autostart as a scheduled task",
+            help="启用计划任务自启",
         )
 
         disable_autostart_parser = subparsers.add_parser(
             "disable-autostart",
-            help="Disable autostart on system boot",
+            help="禁用开机自启",
             prog="yasbc disable-autostart",
         )
         disable_autostart_parser.add_argument(
             "--task",
             action="store_true",
-            help="Disable autostart as a scheduled task",
+            help="禁用计划任务自启",
         )
 
         subparsers.add_parser(
             "enable-crash-dumps",
-            help="Enable crash dumps for troubleshooting",
+            help="启用崩溃转储以排查问题",
             add_help=False,
         )
 
         subparsers.add_parser(
             "disable-crash-dumps",
-            help="Disable crash dumps",
+            help="禁用崩溃转储",
             add_help=False,
         )
 
         subparsers.add_parser(
             "monitor-information",
-            help="Show information about connected monitors",
+            help="显示已连接显示器的信息",
             add_help=False,
         )
 
         show_bar_parser = subparsers.add_parser(
             "show-bar",
-            help="Show the bar on a specific screen",
+            help="在指定屏幕显示状态栏",
             prog="yasbc show-bar",
         )
         show_bar_parser.add_argument(
             "-s",
             "--screen",
             type=str,
-            help="Screen name (optional)",
+            help="屏幕名称（可选）",
         )
 
         hide_bar_parser = subparsers.add_parser(
             "hide-bar",
-            help="Hide the bar on a specific screen",
+            help="在指定屏幕隐藏状态栏",
             prog="yasbc hide-bar",
         )
         hide_bar_parser.add_argument(
             "-s",
             "--screen",
             type=str,
-            help="Screen name (optional)",
+            help="屏幕名称（可选）",
         )
 
         toggle_bar_parser = subparsers.add_parser(
             "toggle-bar",
-            help="Toggle the bar on a specific screen",
+            help="切换指定屏幕上的状态栏",
             prog="yasbc toggle-bar",
         )
         toggle_bar_parser.add_argument(
             "-s",
             "--screen",
             type=str,
-            help="Screen name (optional)",
+            help="屏幕名称（可选）",
         )
 
         # Channel management
         set_channel_parser = subparsers.add_parser(
             "set-channel",
-            help="Switch release channels",
+            help="切换发布渠道",
             prog="yasbc set-channel",
         )
         set_channel_parser.add_argument(
             "target_channel",
             type=str,
             choices=["stable", "preview"],
-            help="Channel to switch to 'stable' for tested releases or 'preview' for latest updates",
+            help="要切换到的渠道：'stable' 为稳定版，'preview' 为最新更新",
         )
 
         subparsers.add_parser(
             "reset",
-            help="Restore default config files and clear cache",
+            help="恢复默认配置文件并清除缓存",
             add_help=False,
         )
 
         subparsers.add_parser(
             "config-dir",
-            help="Open config directory in file explorer",
+            help="在文件资源管理器中打开配置目录",
             add_help=False,
         )
 
         subparsers.add_parser(
             "help",
-            help="Show help message",
+            help="显示帮助信息",
             add_help=False,
         )
         subparsers.add_parser(
             "log",
-            help="Tail yasb process logs (cancel with Ctrl-C)",
+            help="跟踪 yasb 进程日志（按 Ctrl-C 取消）",
             add_help=False,
         )
         subparsers.add_parser(
             "migrate-config",
-            help="Find and fix deprecated options in config",
+            help="查找并修复配置中的已弃用选项",
             add_help=False,
         )
         # No arguments and no -h of its own, everything after `cloud` falls through as
         # unrecognised and is handed to core.cloud.cli, which has its own parser.
         subparsers.add_parser(
             "cloud",
-            help="Back up and restore your config with YASB Cloud",
+            help="使用 YASB Cloud 备份和恢复配置",
             prog="yasbc cloud",
             add_help=False,
         )
@@ -391,41 +391,41 @@ class CLIHandler:
             "-v",
             "--version",
             action="store_true",
-            help="Show program's version number and exit.",
+            help="显示程序版本号并退出。",
         )
         parser.add_argument(
             "-c",
             "--config",
             action="store_true",
-            help="Print config directory path",
+            help="打印配置目录路径",
         )
         parser.add_argument(
             "-h",
             "--help",
             action="store_true",
-            help="Show help message",
+            help="显示帮助信息",
         )
         args, passthrough = parser.parse_known_args()
         # Only `cloud` is allowed leftovers, every other command stays strict.
         if passthrough and args.command != "cloud":
-            parser.error(f"unrecognized arguments: {' '.join(passthrough)}")
+            parser.error(f"无法识别的参数：{' '.join(passthrough)}")
         if args.command == "start":
             if not args.silent:
                 print(
                     textwrap.dedent(f"""\
-                    Start YASB Reborn v{YASB_VERSION} in background.
+                    在后台启动 YASB Reborn v{YASB_VERSION}。
 
-                    # Community
-                    * Join the Discord https://discord.gg/qkeunvBFgX - Chat, ask questions, share your desktops and more...
-                    * GitHub discussions https://github.com/amnweb/yasb/discussions - Ask questions, share your ideas and more...
+                    # 社区
+                    * 加入 Discord https://discord.gg/qkeunvBFgX - 聊天、提问、分享你的桌面等...
+                    * GitHub 讨论 https://github.com/amnweb/yasb/discussions - 提问、分享你的想法等...
 
-                    # Documentation
-                    * Read the docs https://github.com/amnweb/yasb/wiki - how to configure and use YASB
-                    * Read the FAQ https://github.com/amnweb/yasb/wiki/FAQ
+                    # 文档
+                    * 阅读文档 https://github.com/amnweb/yasb/wiki - 了解如何配置和使用 YASB
+                    * 阅读常见问题（FAQ）https://github.com/amnweb/yasb/wiki/FAQ
                     
-                    # Support the project
-                    * Consider sponsoring the project on GitHub Sponsors or Buy Me a Coffee
-                    * Thank you for using YASB!
+                    # 支持项目
+                    * 可以考虑在 GitHub Sponsors 或 Buy Me a Coffee 上赞助本项目
+                    * 感谢你使用 YASB！
                 """)
                 )
             subprocess.Popen(["yasb.exe"])
@@ -446,10 +446,10 @@ class CLIHandler:
         elif args.command == "reload":
             if is_process_running("yasb.exe"):
                 if not args.silent:
-                    print("Reload YASB...")
+                    print("正在重载 YASB...")
                 self.send_command_to_application("reload")
             else:
-                print("YASB is not running. Reload aborted.")
+                print("YASB 未在运行，已中止重载。")
             sys.exit(0)
 
         elif args.command == "show-bar":
@@ -479,7 +479,7 @@ class CLIHandler:
         elif args.command == "enable-autostart":
             if args.task:
                 if not self.task_handler.is_admin():
-                    print("Please run this command as an administrator.")
+                    print("请以管理员身份运行此命令。")
                 else:
                     self.task_handler.create_task()
             else:
@@ -489,7 +489,7 @@ class CLIHandler:
         elif args.command == "disable-autostart":
             if args.task:
                 if not self.task_handler.is_admin():
-                    print("Please run this command as an administrator.")
+                    print("请以管理员身份运行此命令。")
                 else:
                     self.task_handler.delete_task()
             else:
@@ -498,20 +498,20 @@ class CLIHandler:
 
         elif args.command == "enable-crash-dumps":
             if not self.task_handler.is_admin():
-                print("Please run this command as an administrator.")
+                print("请以管理员身份运行此命令。")
             else:
                 self.crash_dump_handler.enable()
             sys.exit(0)
 
         elif args.command == "disable-crash-dumps":
             if not self.task_handler.is_admin():
-                print("Please run this command as an administrator.")
+                print("请以管理员身份运行此命令。")
             else:
                 self.crash_dump_handler.disable()
             sys.exit(0)
 
         elif args.command == "log":
-            print("Starting YASB log client. Press Ctrl+C to exit.")
+            print("正在启动 YASB 日志客户端，按 Ctrl+C 退出。")
             try:
                 while True:
                     # Wait for the log pipe to be created
@@ -532,19 +532,19 @@ class CLIHandler:
                     # Start reading the log stream
                     while True:
                         if not write_message(handle, {"type": "PING"}):
-                            print(f"Failed to write PING. Err: {GetLastError()}")
+                            print(f"写入 PING 失败。错误码：{GetLastError()}")
                             break
                         for _ in range(2):
                             msg = read_message(handle)
                             if msg is None:
-                                print(f"Failed to read message. Err: {GetLastError()}")
+                                print(f"读取消息失败。错误码：{GetLastError()}")
                                 break
                             if msg.get("type") == "PONG":
                                 break
                             elif msg.get("type") == "DATA":
                                 print(msg.get("data"))
             except KeyboardInterrupt:
-                print("\nExiting YASB log client.")
+                print("\n正在退出 YASB 日志客户端。")
 
         elif args.command == "monitor-information":
             try:
@@ -560,32 +560,32 @@ class CLIHandler:
                     geometry = screen.geometry()
                     print(
                         textwrap.dedent(f"""\
-                        {Format.underline}Monitor {i}:{Format.reset}
-                          Name: {screen.name()}
-                          Resolution: {geometry.width()}x{geometry.height()}
-                          Position: ({geometry.left()},{geometry.top()}) to ({geometry.left() + geometry.width()},{geometry.top() + geometry.height()})
-                          Primary: {"Yes" if screen == primary_screen else "No"}
-                          Scale Factor: {screen.devicePixelRatio():.2f}
-                          Manufacturer: {screen.manufacturer() or "Unknown"}
-                          Model: {screen.model() or "Unknown"}
+                        {Format.underline}显示器 {i}:{Format.reset}
+                          名称: {screen.name()}
+                          分辨率: {geometry.width()}x{geometry.height()}
+                          位置: ({geometry.left()},{geometry.top()}) 至 ({geometry.left() + geometry.width()},{geometry.top() + geometry.height()})
+                          主显示器: {"是" if screen == primary_screen else "否"}
+                          缩放因子: {screen.devicePixelRatio():.2f}
+                          制造商: {screen.manufacturer() or "未知"}
+                          型号: {screen.model() or "未知"}
                     """)
                     )
                 app.quit()
             except Exception as e:
-                print(f"Error retrieving monitor information: {e}")
+                print(f"获取显示器信息失败：{e}")
 
         elif args.command == "reset":
             confirm = (
                 input(
-                    "YASB will be stopped if it is running.\n"
-                    "Do you want to continue and restore default config files and clear the cache? (Y/n): "
+                    "如果 YASB 正在运行，将被停止。\n"
+                    "是否继续并恢复默认配置文件、清除缓存？(Y/n): "
                 )
                 .strip()
                 .lower()
             )
 
             if confirm not in ["y", "yes", ""]:
-                print("Reset cancelled.")
+                print("已取消重置。")
                 sys.exit(0)
 
             import shutil
@@ -606,9 +606,9 @@ class CLIHandler:
                 if fpath.exists():
                     try:
                         fpath.unlink()
-                        print(f"Deleted {fpath}")
+                        print(f"已删除 {fpath}")
                     except Exception as e:
-                        print(f"Failed to delete {fpath}: {e}")
+                        print(f"删除 {fpath} 失败：{e}")
 
             # Clear all files in app_data_folder if it exists
             import tempfile
@@ -621,29 +621,29 @@ class CLIHandler:
                     try:
                         if child.is_file() or child.is_symlink():
                             child.unlink()
-                            print(f"Deleted {child}")
+                            print(f"已删除 {child}")
                         elif child.is_dir():
                             shutil.rmtree(child)
-                            print(f"Deleted folder {child}")
+                            print(f"已删除文件夹 {child}")
                     except Exception as e:
-                        print(f"Failed to delete {child}: {e}")
+                        print(f"删除 {child} 失败：{e}")
 
             icons_cache = Path(tempfile.gettempdir()) / "yasb_quick_launch_icons"
             if icons_cache.exists() and icons_cache.is_dir():
                 try:
                     shutil.rmtree(icons_cache)
-                    print(f"Deleted folder {icons_cache}")
+                    print(f"已删除文件夹 {icons_cache}")
                 except Exception as e:
-                    print(f"Failed to delete {icons_cache}: {e}")
+                    print(f"删除 {icons_cache} 失败：{e}")
 
-            print("Reset complete.")
+            print("重置完成。")
             sys.exit(0)
 
         elif args.command == "config-dir":
             try:
                 subprocess.Popen(["explorer", DEFAULT_CONFIG_DIRECTORY])
             except Exception as e:
-                print(f"Failed to open config directory: {e}")
+                print(f"打开配置目录失败：{e}")
             sys.exit(0)
 
         elif args.command == "migrate-config":
@@ -653,50 +653,50 @@ class CLIHandler:
 
             config_path = Path(DEFAULT_CONFIG_DIRECTORY) / "config.yaml"
             if not config_path.exists():
-                print(f"Config file not found: {config_path}")
+                print(f"未找到配置文件：{config_path}")
                 sys.exit(1)
 
             try:
                 raw = config_path.read_text(encoding="utf-8")
             except Exception as e:
-                print(f"Failed to read config: {e}")
+                print(f"读取配置失败：{e}")
                 sys.exit(1)
 
             new_text, changes = migrate_config(raw)
             if not changes:
-                print("No deprecated options found. Your config is up to date.")
+                print("未发现已弃用选项，你的配置是最新的。")
                 sys.exit(0)
 
-            print(f"\nFound {len(changes)} deprecated option(s) in your config:\n")
+            print(f"\n在你的配置中发现 {len(changes)} 个已弃用选项：\n")
             for change in changes:
                 if change["action"] == "remove":
                     print(f"  {Format.yellow}{change['path']}{Format.reset}")
-                    print(f"    Will be removed. {change['message']}")
+                    print(f"    将被移除。{change['message']}")
                 elif change["action"] == "rename":
                     print(
                         f"  {Format.yellow}{change['path']}{Format.reset} -> {Format.green}{change['new_name']}{Format.reset}"
                     )
-                    print(f"    Will be renamed. {change['message']}")
+                    print(f"    将被重命名。{change['message']}")
                 print()
 
-            confirm = input("Apply changes? (Y/n): ").strip().lower()
+            confirm = input("是否应用更改？(Y/n): ").strip().lower()
             if confirm not in ["y", "yes", ""]:
-                print("Migration cancelled.")
+                print("迁移已取消。")
                 sys.exit(0)
 
             backup_path = config_path.with_suffix(".yaml.bak")
             try:
                 backup_path.write_text(raw, encoding="utf-8")
-                print(f"Backup saved to {backup_path}")
+                print(f"备份已保存到 {backup_path}")
             except Exception as e:
-                print(f"Failed to create backup: {e}")
+                print(f"创建备份失败：{e}")
                 sys.exit(1)
 
             try:
                 config_path.write_text(new_text, encoding="utf-8")
-                print(f"Config migrated successfully. {len(changes)} option(s) updated.")
+                print(f"配置迁移成功。已更新 {len(changes)} 个选项。")
             except Exception as e:
-                print(f"Failed to write config: {e}")
+                print(f"写入配置失败：{e}")
                 sys.exit(1)
             sys.exit(0)
 
@@ -707,35 +707,35 @@ class CLIHandler:
         elif args.command == "help" or args.help:
             print(
                 textwrap.dedent(f"""\
-                The command-line interface for YASB Reborn.
+                YASB Reborn 的命令行界面。
 
-                {Format.underline}Usage{Format.reset}: yasbc <COMMAND>
+                {Format.underline}用法{Format.reset}: yasbc <COMMAND>
 
-                {Format.underline}Commands{Format.reset}:
-                  start                     Start the application
-                  stop                      Stop the application
-                  reload                    Reload the application
-                  enable-autostart          Enable autostart on system boot
-                  disable-autostart         Disable autostart on system boot
-                  enable-crash-dumps        Enable crash dumps for troubleshooting
-                  disable-crash-dumps       Disable crash dumps
-                  monitor-information       Show information about connected monitors
-                  show-bar                  Show the bar on all or a specific screen
-                  hide-bar                  Hide the bar on all or a specific screen
-                  toggle-bar                Toggle the bar on all or a specific screen
-                  set-channel               Switch release channels (stable, preview)
-                  update                    Update the application
-                  log                       Tail yasb process logs (cancel with Ctrl-C)
-                  reset                     Restore default config files and clear cache
-                  cloud                     Back up and restore your config with YASB Cloud
-                  config-dir                Open config directory in file explorer
-                  migrate-config            Find and fix deprecated options in config
-                  help                      Print this message
+                {Format.underline}命令{Format.reset}:
+                  start                     启动应用
+                  stop                      停止应用
+                  reload                    重载应用
+                  enable-autostart          启用系统开机自启
+                  disable-autostart         禁用系统开机自启
+                  enable-crash-dumps        启用崩溃转储以排查问题
+                  disable-crash-dumps       禁用崩溃转储
+                  monitor-information       显示已连接显示器的信息
+                  show-bar                  在所有或指定屏幕显示状态栏
+                  hide-bar                  在所有或指定屏幕隐藏状态栏
+                  toggle-bar                在所有或指定屏幕切换状态栏
+                  set-channel               切换发布渠道（stable、preview）
+                  update                    更新应用
+                  log                       跟踪 yasb 进程日志（按 Ctrl-C 取消）
+                  reset                     恢复默认配置文件并清除缓存
+                  cloud                     使用 YASB Cloud 备份和恢复配置
+                  config-dir                在文件资源管理器中打开配置目录
+                  migrate-config            查找并修复配置中的已弃用选项
+                  help                      打印此消息
 
-                {Format.underline}Options{Format.reset}:
-                -v, --version  Print version
-                -c, --config   Print config directory path
-                -h, --help     Print this message
+                {Format.underline}选项{Format.reset}:
+                -v, --version  显示版本
+                -c, --config   打印配置目录路径
+                -h, --help     打印此消息
             """)
             )
             sys.exit(0)
@@ -750,7 +750,7 @@ class CLIHandler:
             )
             print(version_message)
         else:
-            print("Unknown command. Use --help for available options.")
+            print("未知命令，使用 --help 查看可用选项。")
             sys.exit(1)
 
 
@@ -811,18 +811,18 @@ class CLICrashDumpHandler:
                 if not parent_existed:
                     winreg.SetValueEx(key, self.OWNS_PARENT_VALUE, 0, winreg.REG_DWORD, 1)
         except OSError as e:
-            print(f"Failed to enable crash dumps: {e}")
+            print(f"启用崩溃转储失败：{e}")
             return
 
         try:
             os.makedirs(self.DUMP_FOLDER, exist_ok=True)
         except OSError as e:
-            print(f"Warning: could not create the dump directory: {e}")
+            print(f"警告：无法创建转储目录：{e}")
 
-        print("Crash dumps enabled.")
-        print(f"Dumps will be saved to {self.DUMP_FOLDER}")
-        print(f"The last {self.DUMP_COUNT} are kept. Attach the newest one when reporting a crash.")
-        print("A dump is a snapshot of memory, so it can contain data from your config.")
+        print("已启用崩溃转储。")
+        print(f"转储文件将保存到 {self.DUMP_FOLDER}")
+        print(f"保留最近 {self.DUMP_COUNT} 个。报告崩溃时请附上最新的一个。")
+        print("转储是内存快照，可能包含你配置中的数据。")
 
     def disable(self):
         try:
@@ -834,10 +834,10 @@ class CLICrashDumpHandler:
         try:
             winreg.DeleteKey(winreg.HKEY_LOCAL_MACHINE, self.KEY_PATH)
         except FileNotFoundError:
-            print("Crash dumps are not enabled.")
+            print("未启用崩溃转储。")
             return
         except OSError as e:
-            print(f"Failed to disable crash dumps: {e}")
+            print(f"禁用崩溃转储失败：{e}")
             return
 
         # Only tear down LocalDumps if we were the ones who created it, and only while
@@ -851,7 +851,7 @@ class CLICrashDumpHandler:
             except OSError:
                 pass
 
-        print("Crash dumps disabled. Existing dump files were left in place.")
+        print("已禁用崩溃转储，现有转储文件保留。")
 
 
 class CLITaskHandler:
@@ -878,7 +878,7 @@ class CLITaskHandler:
         scheduler.Connect()
         root_folder = scheduler.GetFolder("\\")
         task_def = scheduler.NewTask(0)
-        task_def.RegistrationInfo.Description = "A highly configurable Windows status bar."
+        task_def.RegistrationInfo.Description = "一个高度可配置的 Windows 状态栏。"
         task_def.RegistrationInfo.Author = "AmN"
         task_def.Settings.Compatibility = 6
         trigger = task_def.Triggers.Create(9)
@@ -910,9 +910,9 @@ class CLITaskHandler:
         action.WorkingDirectory = SCRIPT_PATH
         try:
             root_folder.RegisterTaskDefinition("YASB Reborn", task_def, 6, None, None, 3, None)
-            print("Task YASB Reborn created successfully.")
+            print("已成功创建任务 YASB Reborn。")
         except Exception as e:
-            print(f"Failed to create task YASB Reborn. Error: {e}")
+            print(f"创建任务 YASB Reborn 失败。错误：{e}")
 
     def delete_task(self):
         import win32com.client
@@ -922,9 +922,9 @@ class CLITaskHandler:
         root_folder = scheduler.GetFolder("\\")
         try:
             root_folder.DeleteTask("YASB Reborn", 0)
-            print("Task YASB Reborn deleted successfully.")
+            print("已成功删除任务 YASB Reborn。")
         except Exception:
-            print("Failed to delete task YASB or task does not exist.")
+            print("删除任务 YASB 失败，或任务不存在。")
 
 
 class CLIChannelHandler:
@@ -947,43 +947,43 @@ class CLIChannelHandler:
 
         # Check if already on target channel
         if current_channel == target_channel:
-            print(f"\nYou are already on the {target_channel} channel.")
+            print(f"\n你当前已经在 {target_channel} 渠道。")
             sys.exit(0)
 
         # Check if updates are supported
         if not architecture:
-            print("\nError: Cannot switch channels - unsupported architecture.")
+            print("\n错误：无法切换渠道 - 不支持的架构。")
             sys.exit(1)
 
         # Show warning message
-        print(f"\n{Format.yellow}WARNING: Switching release channels{Format.reset}\n")
+        print(f"\n{Format.yellow}警告：正在切换发布渠道{Format.reset}\n")
         print(
-            f"You are about to switch from {Format.yellow}{current_channel}{Format.reset} to {Format.yellow}{target_channel}{Format.reset} channel.\n"
+            f"你将把渠道从 {Format.yellow}{current_channel}{Format.reset} 切换到 {Format.yellow}{target_channel}{Format.reset}。\n"
         )
-        print("Things to consider:")
-        print("  * Configuration files may be incompatible between versions")
-        print("  * You may need to reconfigure some settings after switching")
-        print("  * Switching channels will download and install a new version of YASB")
+        print("注意事项：")
+        print("  * 配置文件在不同版本之间可能不兼容")
+        print("  * 切换后你可能需要重新配置部分设置")
+        print("  * 切换渠道将下载并安装新版本的 YASB")
 
         if target_channel == "preview":
-            print("  * Bugs and instability may be present in preview channel")
-            print("  * Read the changelog: https://github.com/amnweb/yasb/releases/tag/preview")
+            print("  * preview 渠道可能存在错误和不稳定情况")
+            print("  * 阅读更新日志：https://github.com/amnweb/yasb/releases/tag/preview")
         else:
-            print("  * Read the changelog: https://github.com/amnweb/yasb/releases")
+            print("  * 阅读更新日志：https://github.com/amnweb/yasb/releases")
 
         print()
 
         # Ask for confirmation
         try:
-            user_input = input("Do you want to continue? [y/N]: ").strip().lower()
+            user_input = input("是否继续？[y/N]: ").strip().lower()
             if user_input not in ["y", "yes"]:
-                print("\nChannel switch canceled.")
+                print("\n渠道切换已取消。")
                 sys.exit(0)
         except KeyboardInterrupt:
-            print("\n\nChannel switch canceled.")
+            print("\n\n渠道切换已取消。")
             sys.exit(0)
 
-        print(f"\nFetching {Format.magenta}{target_channel}{Format.reset} channel release...")
+        print(f"\n正在获取 {Format.magenta}{target_channel}{Format.reset} 渠道的发布版本...")
 
         try:
             release_info = update_service.check_for_updates(channel=target_channel, skip_version_check=True, timeout=15)
@@ -991,10 +991,10 @@ class CLIChannelHandler:
                 version_display = f"build {release_info.version.replace('preview-', '')}"
             else:
                 version_display = f"version {release_info.version}"
-            print(f"Found {Format.magenta}{target_channel}{Format.reset} {version_display}")
-            print(f"Installer {release_info.asset_name}")
+            print(f"找到 {Format.magenta}{target_channel}{Format.reset} {version_display}")
+            print(f"安装包 {release_info.asset_name}")
             if release_info.asset_size:
-                print(f"Size {release_info.asset_size / 1024 / 1024:.1f} MB")
+                print(f"大小 {release_info.asset_size / 1024 / 1024:.1f} MB")
             # Download the MSI
             temp_dir = tempfile.gettempdir()
             msi_path = os.path.join(temp_dir, release_info.asset_name)
@@ -1013,12 +1013,12 @@ class CLIChannelHandler:
             run_after_command = f'"{EXE_PATH}"'
             combined_command = f"{install_command} && {run_after_command}"
 
-            print("Starting installer...")
+            print("正在启动安装程序...")
             subprocess.Popen(combined_command, shell=True)
             sys.exit(0)
 
         except Exception as e:
-            print(f"\nError switching channels: {e}")
+            print(f"\n切换渠道失败：{e}")
             sys.exit(1)
 
 
@@ -1053,41 +1053,41 @@ class CLIUpdateHandler:
         # Check if updates are supported
         if not update_service.is_update_supported():
             if YASB_RELEASE_CHANNEL.startswith("pr-"):
-                print("\nAutomatic updates are disabled for PR build.")
+                print("\nPR 版本已禁用自动更新。")
             else:
-                print("\nUpdates are not supported on this system.")
+                print("\n此系统不支持自动更新。")
             if not architecture:
-                print("Reason: Unsupported architecture")
+                print("原因：不支持的架构")
             sys.exit(1)
 
-        print("Checking for updates...")
+        print("正在检查更新...")
         arch_suffix = f" ({architecture})" if architecture else ""
-        print(f"Current version {yasb_version}{arch_suffix} ({YASB_RELEASE_CHANNEL})")
+        print(f"当前版本 {yasb_version}{arch_suffix} ({YASB_RELEASE_CHANNEL})")
 
         try:
             release_info = update_service.check_for_updates(timeout=15)
 
             if release_info is None:
-                print(f"YASB Reborn is already up to date (v{yasb_version}).\n")
+                print(f"YASB Reborn 已是最新版本（v{yasb_version}）。\n")
                 sys.exit(0)
 
             # Update available
             if update_service._current_channel == "preview":
                 print(
-                    f"Found {Format.cyan}YASB Reborn{Format.reset} Preview {release_info.version.replace('preview-', '')}"
+                    f"找到 {Format.cyan}YASB Reborn{Format.reset} 预览版 {release_info.version.replace('preview-', '')}"
                 )
-                print("Changelog https://github.com/amnweb/yasb/releases/tag/preview")
+                print("更新日志 https://github.com/amnweb/yasb/releases/tag/preview")
             else:
-                print(f"Found {Format.cyan}YASB Reborn{Format.reset} Version {release_info.version}")
-                print("Changelog https://github.com/amnweb/yasb/releases/latest")
+                print(f"找到 {Format.cyan}YASB Reborn{Format.reset} 版本 {release_info.version}")
+                print("更新日志 https://github.com/amnweb/yasb/releases/latest")
             # Ask the user if they want to continue with the update
             try:
-                user_input = input("\nDo you want to continue with the update? (Y/n): ").strip().lower()
+                user_input = input("\n是否继续更新？(Y/n): ").strip().lower()
                 if user_input not in ["y", "yes", ""]:
-                    print("\nUpdate canceled.")
+                    print("\n更新已取消。")
                     sys.exit(0)
             except KeyboardInterrupt:
-                print("\n\nUpdate canceled.")
+                print("\n\n更新已取消。")
                 sys.exit(0)
 
             # Download the MSI
@@ -1105,12 +1105,12 @@ class CLIUpdateHandler:
             run_after_command = f'"{EXE_PATH}"'
             combined_command = f"{install_command} && {run_after_command}"
 
-            print("Starting installer...")
+            print("正在启动安装程序...")
             subprocess.Popen(combined_command, shell=True)
             sys.exit(0)
 
         except Exception as e:
-            print(f"\nFailed to check for updates: {e}")
+            print(f"\n检查更新失败：{e}")
             sys.exit(1)
 
     def download_yasb(self, msi_url: str, msi_path: str) -> None:
@@ -1127,18 +1127,18 @@ class CLIUpdateHandler:
             with urlopen(msi_url) as response:
                 content_length = response.getheader("Content-Length")
                 if content_length is None:
-                    print("Error: Missing Content-Length header.")
+                    print("错误：缺少 Content-Length 响应头。")
                     sys.exit(1)
 
                 try:
                     total_length = int(content_length)
                 except ValueError:
-                    print(f"Error: Invalid Content-Length value: {content_length}")
+                    print(f"错误：无效的 Content-Length 值：{content_length}")
                     sys.exit(1)
 
                 downloaded = 0
                 chunk_size = 4096
-                print(f"Downloading {Format.magenta}{msi_url}{Format.reset}")
+                print(f"正在下载 {Format.magenta}{msi_url}{Format.reset}")
                 with open(msi_path, "wb") as file:
                     while True:
                         chunk = response.read(chunk_size)
@@ -1152,20 +1152,20 @@ class CLIUpdateHandler:
                         bar = "\u2588" * filled + "\u2591" * (bar_length - filled)
                         print(f"\r{bar} {percent:.1f}%", end="", flush=True)
 
-                print("\r" + " " * (bar_length + 10) + "\rDownload completed.")
+                print("\r" + " " * (bar_length + 10) + "\r下载完成。")
 
         except KeyboardInterrupt:
-            print("\nDownload interrupted by user.")
+            print("\n下载被用户中断。")
             sys.exit(0)
 
         except urllib.error.URLError as e:
-            print(f"Download failed: {e}")
+            print(f"下载失败：{e}")
             sys.exit(1)
 
         # Verify the downloaded file size
         downloaded_size = os.path.getsize(msi_path)
         if downloaded_size != total_length:
-            print("Error: Downloaded file size does not match expected size.")
+            print("错误：下载文件大小与预期不符。")
             sys.exit(1)
 
 
