@@ -173,7 +173,7 @@ class TrafficWidget(BaseWidget):
                 "today_downloaded": "< 1 MB",
                 "session_uploaded": "< 1 MB",
                 "session_downloaded": "< 1 MB",
-                "session_duration": "just now",
+                "session_duration": "刚刚",
                 "alltime_uploaded": "< 1 MB",
                 "alltime_downloaded": "< 1 MB",
             }
@@ -277,7 +277,7 @@ class TrafficWidget(BaseWidget):
         if "internet-info" in self.menu_labels:
             try:
                 net_status = "connected" if self._is_internet_connected else "disconnected"
-                status_text = f"Internet {net_status.capitalize()}"
+                status_text = f"网络{'已连接' if net_status == 'connected' else '已断开'}"
                 self.menu_labels["internet-info"].setText(status_text)
 
                 target_class = f"internet-info {net_status}"
@@ -364,16 +364,16 @@ class TrafficWidget(BaseWidget):
         header_layout.setContentsMargins(0, 0, 0, 0)
         header_layout.setSpacing(0)
 
-        header_label = QLabel("Network Traffic")
+        header_label = QLabel("网络流量")
         header_label.setProperty("class", "title")
         header_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         header_layout.addWidget(header_label)
 
         header_layout.addStretch()
 
-        reset_button = QPushButton("Reset All")
+        reset_button = QPushButton("全部重置")
         reset_button.setProperty("class", "reset-button")
-        set_tooltip(reset_button, "Reset all traffic data")
+        set_tooltip(reset_button, "重置所有流量数据")
         reset_button.clicked.connect(self._reset_traffic_data)
         header_layout.addWidget(reset_button)
 
@@ -391,7 +391,7 @@ class TrafficWidget(BaseWidget):
         speed_columns_layout.setSpacing(0)
 
         # Download column
-        download_column, download_value, download_unit = create_speed_column("download-speed", "Download")
+        download_column, download_value, download_unit = create_speed_column("download-speed", "下载")
         speed_columns_layout.addWidget(download_column)
 
         # Add separator between columns
@@ -400,7 +400,7 @@ class TrafficWidget(BaseWidget):
         speed_columns_layout.addWidget(separator)
 
         # Upload column
-        upload_column, upload_value, upload_unit = create_speed_column("upload-speed", "Upload")
+        upload_column, upload_value, upload_unit = create_speed_column("upload-speed", "上传")
         speed_columns_layout.addWidget(upload_column)
 
         # Add columns to speed section
@@ -418,9 +418,9 @@ class TrafficWidget(BaseWidget):
 
         # Create other sections (updated titles and classes)
         other_sections = [
-            ("Session Total", "session", ["session-upload", "session-download", "session-duration"]),
-            ("Today's Total", "today", ["today-upload", "today-download"]),
-            ("All-Time Total", "alltime", ["alltime-upload", "alltime-download"]),
+            ("会话总计", "session", ["session-upload", "session-download", "session-duration"]),
+            ("今日总计", "today", ["today-upload", "today-download"]),
+            ("累计总计", "alltime", ["alltime-upload", "alltime-download"]),
         ]
 
         for title, class_name, label_classes in other_sections:
@@ -455,14 +455,14 @@ class TrafficWidget(BaseWidget):
             layout.addWidget(container)
 
         if self.config.menu.show_interface_name:
-            interface_label = QLabel(f"Network Interface: {self.config.interface.capitalize()}")
+            interface_label = QLabel(f"网络接口：{self.config.interface.capitalize()}")
             interface_label.setProperty("class", "interface-info")
             interface_label.setWordWrap(True)
             interface_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             layout.addWidget(interface_label)
 
         if self.config.menu.show_internet_info:
-            status_text = "Internet Connected" if self._is_internet_connected else "Internet Disconnected"
+            status_text = "网络已连接" if self._is_internet_connected else "网络已断开"
             internet_info = QLabel(status_text)
             internet_info.setProperty("class", "internet-info")
             internet_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -503,7 +503,7 @@ class TrafficWidget(BaseWidget):
                             shared_data["session_duration"],
                         )
                     else:
-                        data = ("0", "0", "< 1 MB", "< 1 MB", "< 1 MB", "< 1 MB", "< 1 MB", "< 1 MB", "just now")
+                        data = ("0", "0", "< 1 MB", "< 1 MB", "< 1 MB", "< 1 MB", "< 1 MB", "< 1 MB", "刚刚")
 
                 (
                     raw_upload_speed,
@@ -535,13 +535,13 @@ class TrafficWidget(BaseWidget):
 
                 # Update other sections
                 label_updates = {
-                    "session-upload": ("Uploaded:", session_uploaded),
-                    "session-download": ("Downloaded:", session_downloaded),
-                    "session-duration": ("Duration:", session_duration),
-                    "today-upload": ("Uploaded:", today_uploaded),
-                    "today-download": ("Downloaded:", today_downloaded),
-                    "alltime-upload": ("Uploaded:", alltime_uploaded),
-                    "alltime-download": ("Downloaded:", alltime_downloaded),
+                    "session-upload": ("已上传：", session_uploaded),
+                    "session-download": ("已下载：", session_downloaded),
+                    "session-duration": ("时长：", session_duration),
+                    "today-upload": ("已上传：", today_uploaded),
+                    "today-download": ("已下载：", today_downloaded),
+                    "alltime-upload": ("已上传：", alltime_uploaded),
+                    "alltime-download": ("已下载：", alltime_downloaded),
                 }
 
                 for class_name, (text, value) in label_updates.items():
