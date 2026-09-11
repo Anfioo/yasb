@@ -67,13 +67,13 @@ def error_from(status: int, body: bytes) -> ApiError:
     if isinstance(payload, dict) and isinstance(payload.get("error"), dict):
         problem = payload["error"]
         return ApiError(
-            str(problem.get("message", "Something went wrong")),
+            str(problem.get("message", "出了点问题")),
             code=str(problem.get("code", "server_error")),
             status=status,
         )
     if status == 0:
-        return ApiError("Could not reach YASB Cloud. Check your connection.", code="network_error")
-    return ApiError(f"Unexpected server response ({status})", code="server_error", status=status)
+        return ApiError("无法连接到 YASB Cloud。请检查你的网络连接。", code="network_error")
+    return ApiError(f"服务器响应异常（{status}）", code="server_error", status=status)
 
 
 def reply_error(reply: QNetworkReply) -> ApiError:
@@ -97,7 +97,7 @@ def save_reply(reply: QNetworkReply, path: Path) -> ApiError | None:
         try:
             path.write_bytes(bytes(reply.readAll()))
         except OSError as exc:
-            return ApiError(f"Could not save the download: {exc.strerror or exc}", code="write_failed")
+            return ApiError(f"无法保存下载：{exc.strerror or exc}", code="write_failed")
         return None
     finally:
         reply.deleteLater()
@@ -140,7 +140,7 @@ class Call(QObject):
         self._done = True
         # Before the abort, which re-enters _on_finished and emits finished from there.
         logger.warning("api timeout: %s", self._reply.request().url().path())
-        self.failed.emit(ApiError("The server did not respond in time", code="timeout"))
+        self.failed.emit(ApiError("服务器响应超时", code="timeout"))
         self._reply.abort()
 
     def _on_finished(self) -> None:
@@ -225,7 +225,7 @@ class ApiClient(QObject):
         elif verb == "DELETE":
             reply = self._net.sendCustomRequest(request, b"DELETE")
         else:
-            raise ValueError(f"Unsupported verb {verb}")
+            raise ValueError(f"不支持的动词 {verb}")
         return self._track(Call(reply, self))
 
     def _authenticated(self, verb: str, path: str, body: dict | None = None) -> Call:
