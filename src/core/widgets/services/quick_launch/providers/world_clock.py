@@ -236,14 +236,14 @@ def _format_diff(local_dt: datetime, city_dt: datetime) -> str:
     diff = city_off - local_off
     total_hours = diff.total_seconds() / 3600
     if total_hours == 0:
-        return "same as local"
-    sign = "ahead" if total_hours > 0 else "behind"
+        return "与本地相同"
+    sign = "领先" if total_hours > 0 else "落后"
     total_hours = abs(total_hours)
     if total_hours == int(total_hours):
-        return f"{int(total_hours)}h {sign}"
+        return f"{int(total_hours)} 小时{sign}"
     h = int(total_hours)
     m = int((total_hours - h) * 60)
-    return f"{h}h {m}m {sign}"
+    return f"{h} 小时 {m} 分{sign}"
 
 
 def _build_result(city: str, tz_id: str, now_utc: datetime, local_dt: datetime, pinned: bool = False) -> ProviderResult:
@@ -256,7 +256,7 @@ def _build_result(city: str, tz_id: str, now_utc: datetime, local_dt: datetime, 
     diff_str = _format_diff(local_dt, city_dt)
     desc = f"{date_str} - {utc_str} ({diff_str})"
     if pinned:
-        desc += " - pinned"
+        desc += " - 已固定"
     return ProviderResult(
         title=f"{city} - {time_str}",
         description=desc,
@@ -270,8 +270,8 @@ class WorldClockProvider(BaseProvider):
     """Show current time in cities around the world."""
 
     name = "world_clock"
-    display_name = "World Clock"
-    input_placeholder = "Search cities or timezones..."
+    display_name = "世界时钟"
+    input_placeholder = "搜索城市或时区..."
     icon = ICON_CLOCK
 
     def __init__(self, config: dict | None = None):
@@ -353,8 +353,8 @@ class WorldClockProvider(BaseProvider):
             return []
         pinned = self.is_pinned(city)
         return [
-            ProviderMenuAction(id="copy", label="Copy time"),
-            ProviderMenuAction(id="toggle_pin", label="Unpin city" if pinned else "Pin city"),
+            ProviderMenuAction(id="copy", label="复制时间"),
+            ProviderMenuAction(id="toggle_pin", label="取消固定城市" if pinned else "固定城市"),
         ]
 
     def execute_context_menu_action(self, action_id: str, result: ProviderResult) -> ProviderMenuActionResult:
