@@ -97,7 +97,7 @@ class VSCodeProvider(BaseProvider):
 
     name = "vscode"
     display_name = "VSCode"
-    input_placeholder = "Search VSCode recents..."
+    input_placeholder = "搜索 VSCode 最近使用的项目..."
     icon = ICON_VSCODE
 
     def __init__(self, config: dict | None = None):
@@ -231,8 +231,8 @@ class VSCodeProvider(BaseProvider):
                         )
                     )
 
-            _append_group(folders, "Folders & Workspaces")
-            _append_group(files, "Files")
+            _append_group(folders, "文件夹与工作区")
+            _append_group(files, "文件")
 
         return results
 
