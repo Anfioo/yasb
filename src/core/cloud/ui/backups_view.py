@@ -74,8 +74,8 @@ class BackupItemWidget(Card):
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(12)
 
-        device = snapshot.device_name or "Unknown PC"
-        version = snapshot.app_version or "Unknown"
+        device = snapshot.device_name or "未知电脑"
+        version = snapshot.app_version or "未知"
         note = snapshot.note.strip()
         when = relative_time(snapshot.created_at)
         size = format_size(snapshot.size_bytes)
@@ -91,7 +91,7 @@ class BackupItemWidget(Card):
         mark.setFixedWidth(20)
         mark.setStyleSheet("background: transparent;")
         if shared:
-            mark.setToolTip("Anyone with the link can download this backup")
+            mark.setToolTip("任何拥有此链接的人都可以下载此备份")
         layout.addWidget(mark, 0, Qt.AlignmentFlag.AlignVCenter)
 
         text_layout = QVBoxLayout()
@@ -103,18 +103,18 @@ class BackupItemWidget(Card):
         layout.addLayout(text_layout, 1)
 
         sharing = (
-            [("copy_link", "Copy link"), ("unshare", "Stop sharing")]
+            [("copy_link", "复制链接"), ("unshare", "停止共享")]
             if snapshot.share_url
-            else [("share", "Share publicly")]
+            else [("share", "公开共享")]
         )
         self.menu_dropdown = DropDown(
             items=[
-                ("actions", "Actions"),
-                ("restore", "Restore"),
-                ("download", "Save a copy"),
+                ("actions", "操作"),
+                ("restore", "恢复"),
+                ("download", "保存副本"),
                 *sharing,
-                ("rename", "Edit note"),
-                ("delete", "Delete"),
+                ("rename", "编辑备注"),
+                ("delete", "删除"),
             ],
             parent=self,
         )
@@ -181,7 +181,7 @@ class BackupsView(QWidget):
 
         header = QHBoxLayout()
         header.setAlignment(Qt.AlignmentFlag.AlignVCenter)
-        header.addWidget(TextBlock("Backups", variant="subtitle"), alignment=Qt.AlignmentFlag.AlignVCenter)
+        header.addWidget(TextBlock("备份", variant="subtitle"), alignment=Qt.AlignmentFlag.AlignVCenter)
         header.addStretch()
 
         self.spinner_container = QWidget()
@@ -194,7 +194,7 @@ class BackupsView(QWidget):
         self.backup_spinner.hide()
         header.addWidget(self.spinner_container)
 
-        self.backup_btn = Button("Backup Now", variant="accent")
+        self.backup_btn = Button("立即备份", variant="accent")
         self.backup_btn.setFixedHeight(28)
         self.backup_btn.setEnabled(self._can_write)
         self.backup_btn.clicked.connect(self.backup_now_requested.emit)
@@ -206,7 +206,7 @@ class BackupsView(QWidget):
         self.settings_btn.setIcon(svg_icon(GEAR, 15, t["text_primary"]))
         self.settings_btn.setIconSize(QSize(15, 15))
         self.settings_btn.setFixedSize(32, 28)
-        self.settings_btn.setToolTip("Settings")
+        self.settings_btn.setToolTip("设置")
         self.settings_btn.clicked.connect(self.settings_requested.emit)
         header.addWidget(self.settings_btn)
 
@@ -251,18 +251,18 @@ class BackupsView(QWidget):
         """
         self._running = running
         self.backup_spinner.setVisible(running)
-        self.backup_btn.setText(label if running and label else "Backup Now")
+        self.backup_btn.setText(label if running and label else "立即备份")
         self.backup_btn.setEnabled(self._can_write and not running)
 
-    def show_error(self, message: str, title: str = "Error"):
-        ContentDialog(parent=self.window() or self, title=title, content=message, close_button_text="OK").show_dialog()
+    def show_error(self, message: str, title: str = "错误"):
+        ContentDialog(parent=self.window() or self, title=title, content=message, close_button_text="确定").show_dialog()
 
     def show_share_link(self, url: str) -> None:
         self._dialog = ContentDialog(
             parent=self.window() or self,
-            title="Share link",
-            content=f"{url}\n\nAnyone who has this link can download this backup.",
-            primary_button_text="Copy link",
+            title="共享链接",
+            content=f"{url}\n\n任何拥有此链接的人都可以下载此备份。",
+            primary_button_text="复制链接",
             default_button=ContentDialogButton.PRIMARY,
         )
         self._dialog.primary_button_click.connect(lambda: QGuiApplication.clipboard().setText(url))
@@ -274,7 +274,7 @@ class BackupsView(QWidget):
             title=title,
             content=message,
             primary_button_text=action,
-            close_button_text="Cancel",
+            close_button_text="取消",
             default_button=ContentDialogButton.PRIMARY if accent_action else ContentDialogButton.CLOSE,
         )
         self._dialog.primary_button_click.connect(on_accept)
@@ -410,9 +410,9 @@ class BackupsView(QWidget):
 
     def _handle_item_delete(self, snapshot_id: str):
         self.confirm(
-            "Delete this backup?",
-            "This cannot be undone.",
-            "Delete",
+            "删除此备份？",
+            "此操作无法撤销。",
+            "删除",
             lambda: self._begin_delete(snapshot_id),
         )
 

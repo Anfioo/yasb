@@ -215,7 +215,7 @@ class CloudWindow(ViewBase, QMainWindow):
 
     def _on_signed_in(self, payload: dict) -> None:
         if not self._session.apply_login(payload):
-            self._on_sign_in_failed(BAD_SIGN_IN, "Could Not Sign In")
+            self._on_sign_in_failed(BAD_SIGN_IN, "无法登录")
             return
         self._load_account()
 
@@ -276,7 +276,7 @@ class CloudWindow(ViewBase, QMainWindow):
 
     def _fail_to_connect(self, error: ApiError) -> None:
         self._show_connect()
-        self.connect_view.show_error(str(error), title="Could Not Connect")
+        self.connect_view.show_error(str(error), title="无法连接")
 
     def _fetch_backups(self, offset: int = 0) -> None:
         if self._account is not None and not self._account.access.can_read:
@@ -288,7 +288,7 @@ class CloudWindow(ViewBase, QMainWindow):
 
     def _on_backups_failed(self, error: ApiError) -> None:
         self.backups_view.loading_failed()
-        self.backups_view.show_error(str(error), title="Could Not Load Backups")
+        self.backups_view.show_error(str(error), title="无法加载备份")
 
     def _on_backups(self, payload: dict) -> None:
         """The first page replaces, every page after it appends. Which one comes from the
@@ -330,8 +330,8 @@ class CloudWindow(ViewBase, QMainWindow):
             if not ok:
                 logger.warning("scheduled task could not be removed: %s", detail)
                 self.backups_view.show_error(
-                    f"Automatic backup was turned off, but its scheduled task could not be removed. {detail}",
-                    title="Could Not Remove The Task",
+                    f"自动备份已关闭，但其计划任务无法移除。{detail}",
+                    title="无法移除计划任务",
                 )
             return
 
@@ -343,8 +343,8 @@ class CloudWindow(ViewBase, QMainWindow):
             self.settings_view.set_settings(replace(self._settings, auto_backup=False))
             self._store(replace(self._settings, auto_backup=False))
             self.backups_view.show_error(
-                f"Automatic backup could not be scheduled. {detail}",
-                title="Could Not Schedule Backups",
+                f"无法计划自动备份。{detail}",
+                title="无法计划备份",
             )
             return
 
@@ -359,8 +359,8 @@ class CloudWindow(ViewBase, QMainWindow):
             return True
 
         self.backups_view.show_error(
-            "Your settings could not be saved, so they will be forgotten when YASB Cloud closes.",
-            title="Could Not Save Settings",
+            "你的设置无法保存，因此 YASB Cloud 关闭后它们将被遗忘。",
+            title="无法保存设置",
         )
         return False
 
@@ -368,11 +368,11 @@ class CloudWindow(ViewBase, QMainWindow):
         """One rule per dialog. The same InputDialog the note and rename use."""
         self._dialog = InputDialog(
             parent=self,
-            title="Add Rule",
-            content="Files matching this pattern are left out of every backup:",
-            placeholder="e.g., *.env  or  secrets/*",
-            primary_button_text="Add",
-            close_button_text="Cancel",
+            title="添加规则",
+            content="匹配此模式的文件将被排除在每次备份之外：",
+            placeholder="例如：*.env  或  secrets/*",
+            primary_button_text="添加",
+            close_button_text="取消",
         )
         self._dialog.accepted.connect(self.settings_view.add_rule)
         self._dialog.show_dialog()
@@ -384,7 +384,7 @@ class CloudWindow(ViewBase, QMainWindow):
             everything = collect_files(root)
             kept = collect_files(root, self._settings.exclude)
         except SnapshotError as exc:
-            self.backups_view.show_error(str(exc), title="Could Not Read Your Configuration")
+            self.backups_view.show_error(str(exc), title="无法读取你的配置")
             return
 
         removed = len(everything) - len(kept)
@@ -397,11 +397,11 @@ class CloudWindow(ViewBase, QMainWindow):
     def _handle_backup_now(self) -> None:
         self._dialog = InputDialog(
             parent=self,
-            title="Backup Note",
-            content="Enter an optional label or note for this snapshot (max 100 chars):",
-            placeholder="e.g., My Custom Dark Theme Setup",
-            primary_button_text="Backup",
-            close_button_text="Cancel",
+            title="备份备注",
+            content="为此快照输入可选的标签或备注（最多 100 个字符）：",
+            placeholder="例如：我的自定义深色主题设置",
+            primary_button_text="备份",
+            close_button_text="取消",
         )
         self._dialog.accepted.connect(self._ops.backup)
         self._dialog.show_dialog()
@@ -411,10 +411,10 @@ class CloudWindow(ViewBase, QMainWindow):
         if snapshot is None:
             return
         self.backups_view.confirm(
-            "Restore this backup?",
-            "YASB will stop, your files will be replaced, and it will start again. "
-            "A copy of your current configuration is saved first.",
-            "Restore",
+            "恢复此备份？",
+            "YASB 将停止，你的文件将被替换，然后它会重新启动。"
+            "会先保存当前配置的副本。",
+            "恢复",
             lambda: self._ops.restore(snapshot_id),
         )
 
@@ -422,7 +422,7 @@ class CloudWindow(ViewBase, QMainWindow):
         snapshot = self._snapshot(snapshot_id)
         if snapshot is None:
             return
-        chosen = QFileDialog.getExistingDirectory(self, "Choose where to save this backup")
+        chosen = QFileDialog.getExistingDirectory(self, "选择保存此备份的位置")
         if not chosen:
             return
 
@@ -437,23 +437,23 @@ class CloudWindow(ViewBase, QMainWindow):
             return
         self._dialog = InputDialog(
             parent=self,
-            title="Edit Note",
-            content="Rename this snapshot so you can recognise it later",
+            title="编辑备注",
+            content="重命名此快照，以便以后识别",
             text=snapshot.note,
-            placeholder="e.g., My Custom Dark Theme Setup",
-            primary_button_text="Save",
-            close_button_text="Cancel",
+            placeholder="例如：我的自定义深色主题设置",
+            primary_button_text="保存",
+            close_button_text="取消",
         )
         self._dialog.accepted.connect(lambda note: self._ops.save_note(snapshot, note))
         self._dialog.show_dialog()
 
     def _handle_share(self, snapshot_id: str) -> None:
         self.backups_view.confirm(
-            "Share publicly?",
-            "Anyone with the link can download this backup. Your configuration is published "
-            "as it is, including any API keys or tokens it contains.\n\n"
-            "You can stop sharing at any time, which makes the link stop working.",
-            "Share",
+            "公开共享？",
+            "任何拥有此链接的人都可以下载此备份。你的配置将按原样公开，"
+            "包括其中包含的任何 API 密钥或令牌。\n\n"
+            "你可以随时停止共享，链接将随之失效。",
+            "共享",
             lambda: self._ops.share(snapshot_id),
             accent_action=True,
         )
@@ -499,8 +499,8 @@ class CloudWindow(ViewBase, QMainWindow):
         # read as the backup having been lost.
         call.failed.connect(
             lambda _error: self.backups_view.show_error(
-                "The backup was saved, but this list could not be updated. Reopen the window to see it.",
-                title="Backup Complete",
+                "备份已保存，但此列表无法更新。重新打开窗口即可看到它。",
+                title="备份完成",
             )
         )
         # Storage used changed, so the footer is refetched either way.
@@ -516,7 +516,7 @@ class CloudWindow(ViewBase, QMainWindow):
         self.backups_view.set_busy(True, message)
 
     def _on_op_failed(self, message: str) -> None:
-        self.backups_view.show_error(message, title="Something Went Wrong")
+        self.backups_view.show_error(message, title="出现问题")
 
     def _on_delete_finished(self, snapshot_id: str, ok: bool) -> None:
         self.backups_view.finish_delete(snapshot_id, ok)
@@ -531,8 +531,8 @@ class CloudWindow(ViewBase, QMainWindow):
         self._mark_in_sync()
         if getattr(result, "bar_was_running", False) and not getattr(result, "bar_restarted", False):
             self.backups_view.show_error(
-                "Your configuration was restored, but YASB did not restart. Start it manually.",
-                title="Restore Complete",
+                "你的配置已恢复，但 YASB 未重新启动。请手动启动。",
+                title="恢复完成",
             )
 
     def closeEvent(self, event) -> None:
@@ -548,15 +548,15 @@ def _reason(access: Access) -> str:
     # for three different states - writes fine, writes stopped, everything stopped - so
     # keying off the code alone reported a stopped subscription while backups still ran.
     if access.reason == "no_subscription":
-        return "No active subscription"
+        return "没有有效的订阅"
     if not access.can_read:
-        return "Subscription expired"
+        return "订阅已过期"
     if not access.can_write:
         # Paired with the deletion date, so this half names the cause and that half the cost.
-        return "Subscription ended"
+        return "订阅已结束"
     if access.reason == "payment_past_due":
         # Still writable, so this states the problem without claiming anything is blocked.
-        return "Payment failed"
+        return "付款失败"
     return ""
 
 
@@ -564,7 +564,7 @@ def _read_deadline(access: Access) -> str:
     if access.can_write or not access.can_read or not access.read_until:
         return ""
     moment = parse_timestamp(access.read_until)
-    return f"Backups deleted {moment.astimezone():%d %b}" if moment else ""
+    return f"备份将于 {moment.astimezone():%d %b} 删除" if moment else ""
 
 
 def _footer_state(account: Account) -> str:
@@ -603,12 +603,12 @@ class Footer(QFrame):
         self._email = QLabel("")
         layout.addWidget(self._email, alignment=Qt.AlignmentFlag.AlignVCenter)
 
-        self._manage = Button("Manage account", variant="default", font_size=13)
+        self._manage = Button("管理账户", variant="default", font_size=13)
         self._manage.setFixedHeight(28)
         self._manage.clicked.connect(self.manage_requested.emit)
         layout.addWidget(self._manage)
 
-        self._sign_out = Button("Sign out", variant="default", font_size=13)
+        self._sign_out = Button("退出登录", variant="default", font_size=13)
         self._sign_out.setFixedHeight(28)
         self._sign_out.clicked.connect(self.sign_out_requested.emit)
         layout.addWidget(self._sign_out)
@@ -622,7 +622,7 @@ class Footer(QFrame):
 
         reason = _reason(account.access)
         if not reason:
-            reason = subscription.plan_id.title() if subscription else "No subscription"
+            reason = subscription.plan_id.title() if subscription else "无订阅"
 
         self._email.setText(account.email)
 
@@ -630,7 +630,7 @@ class Footer(QFrame):
         if deadline := _read_deadline(account.access):
             parts.append(deadline)
         if account.access.can_write and limits.max_storage_bytes > 0:
-            parts.append(f"{format_size(usage.bytes)} of {format_size(limits.max_storage_bytes)}")
+            parts.append(f"{format_size(usage.bytes)} / {format_size(limits.max_storage_bytes)}")
 
         self._details.setText(" · ".join(parts))
         self._state = _footer_state(account)
@@ -686,7 +686,7 @@ class SignInFlow(QObject):
     def start(self) -> None:
         call = self._api.request_device_code(device_name())
         call.succeeded.connect(self._on_code)
-        call.failed.connect(lambda error: self.failed.emit(str(error), "Could Not Sign In"))
+        call.failed.connect(lambda error: self.failed.emit(str(error), "无法登录"))
 
     def cancel(self) -> None:
         self._poll.stop()
@@ -702,7 +702,7 @@ class SignInFlow(QObject):
             # Without it there is nothing to poll for. Starting anyway put a blank code on
             # screen and waited forever, which is the one outcome this class promises not to
             # have: exactly one of signed_in or failed, per attempt.
-            self.failed.emit(BAD_SIGN_IN, "Could Not Sign In")
+            self.failed.emit(BAD_SIGN_IN, "无法登录")
             return
 
         # Refused rather than opened when it is not on our own site - see approve_uri. Treated
@@ -711,7 +711,7 @@ class SignInFlow(QObject):
         # the same dead wait the missing device_code above exists to prevent.
         self._verification_uri = approve_uri(payload)
         if not self._verification_uri:
-            self.failed.emit(BAD_SIGN_IN, "Could Not Sign In")
+            self.failed.emit(BAD_SIGN_IN, "无法登录")
             return
 
         self._elapsed_ms = 0
@@ -727,7 +727,7 @@ class SignInFlow(QObject):
         self._elapsed_ms += POLL_INTERVAL_MS
         if self._elapsed_ms >= POLL_TIMEOUT_MS:
             self.cancel()
-            self.failed.emit(EXPIRED_CODE_APP, "Request Expired")
+            self.failed.emit(EXPIRED_CODE_APP, "请求已过期")
             return
 
         call = self._api.poll_device_token(self._device_code)
@@ -750,7 +750,7 @@ class SignInFlow(QObject):
             return
         self.cancel()
         message = {
-            "access_denied": "The request was denied in the browser.",
+            "access_denied": "请求已在浏览器中被拒绝。",
             "expired_token": EXPIRED_CODE_APP,
         }.get(error.code, str(error))
-        self.failed.emit(message, "Could Not Sign In")
+        self.failed.emit(message, "无法登录")
