@@ -82,7 +82,7 @@ class OpenMeteoWidget(BaseWidget):
         self.build_widget_label(
             self._label_content,
             self._label_alt_content,
-            label_placeholder="weather update...",
+            label_placeholder="正在获取天气...",
             hide_icons=True,
         )
         self.register_callback("toggle_label", self._toggle_label)
@@ -112,7 +112,7 @@ class OpenMeteoWidget(BaseWidget):
             is_cache_valid = False
 
             if not cached_data:
-                self._set_label_text("Fetching data...")
+                self._set_label_text("正在获取数据...")
             else:
                 time_diff_ms = int(time.time() * 1000) - last_updated_ms
                 update_interval_ms = self.config.update_interval * 1000
@@ -131,7 +131,7 @@ class OpenMeteoWidget(BaseWidget):
             if self._widget_id not in OpenMeteoWidget._shared_fetchers:
                 self._start_weather_fetcher(delayed=is_cache_valid)
         else:
-            self._set_label_text("Setup location")
+            self._set_label_text("设置位置")
             logging.info("No saved location for %s. Awaiting user setup.", self._widget_id)
 
         # Clean up stale entries once all widgets have initialized
@@ -228,18 +228,18 @@ class OpenMeteoWidget(BaseWidget):
         layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(12)
 
-        title = QLabel("Setup Location")
+        title = QLabel("设置位置")
         title.setProperty("class", "search-head")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
 
-        info = QLabel("Search for a location to set your weather widget")
+        info = QLabel("搜索位置以设置天气组件")
         info.setProperty("class", "search-description")
         info.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(info)
 
         search_input = QLineEdit()
-        search_input.setPlaceholderText("Search location...")
+        search_input.setPlaceholderText("搜索位置...")
         search_input.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
         search_input.setProperty("class", "search-input")
         search_input.setMinimumWidth(280)
@@ -282,7 +282,7 @@ class OpenMeteoWidget(BaseWidget):
                 self.dialog.adjustSize()
                 return
             for r in results:
-                parts = [r.get("name", "Unknown")]
+                parts = [r.get("name", "未知")]
                 if r.get("admin3"):
                     parts.append(r["admin3"])
                 if r.get("admin2"):
@@ -306,7 +306,7 @@ class OpenMeteoWidget(BaseWidget):
                 # Update all instances sharing this widget_id
                 for inst in OpenMeteoWidget._shared_instances.get(self._widget_id, []):
                     inst._location_data = location
-                    inst._set_label_text("Fetching data...")
+                    inst._set_label_text("正在获取数据...")
                 # Close the dialog and start fetching weather data
                 self.dialog.hide()
                 self._start_weather_fetcher()
@@ -335,7 +335,7 @@ class OpenMeteoWidget(BaseWidget):
         icon_label.setProperty("class", "no-data-icon")
         icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        info_label = QLabel("Weather data not available")
+        info_label = QLabel("天气数据不可用")
         info_label.setProperty("class", "no-data-text")
         info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -393,7 +393,7 @@ class OpenMeteoWidget(BaseWidget):
                 btn = QLabel(icon)
                 btn.setProperty("class", f"hourly-data-button{' active' if data_type == default_data_type else ''}")
                 btn.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                set_tooltip(btn, data_type.capitalize(), delay=400, position="top")
+                set_tooltip(btn, {"temperature": "温度", "rain": "降雨", "snow": "降雪"}[data_type], delay=400, position="top")
                 buttons_layout.addWidget(btn)
                 buttons.append(btn)
 
@@ -418,7 +418,7 @@ class OpenMeteoWidget(BaseWidget):
         today_label0 = QLabel(f"{self._weather_data['{location}']} {self._weather_data['{temp}']}")
         today_label0.setProperty("class", "label location")
         today_label0.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        set_tooltip(today_label0, "Click to change location", delay=400, position="bottom")
+        set_tooltip(today_label0, "点击更换位置", delay=400, position="bottom")
 
         today_label0.mousePressEvent = self.reset_location
 
@@ -449,9 +449,9 @@ class OpenMeteoWidget(BaseWidget):
         snow_c = self._weather_data.get("{snow_chance}", 0)
         precip_parts = []
         if rain_c != "N/A" and isinstance(rain_c, (int, float)) and rain_c > 0:
-            precip_parts.append(f"Rain chance {rain_c}%")
+            precip_parts.append(f"降雨概率 {rain_c}%")
         if snow_c != "N/A" and isinstance(snow_c, (int, float)) and snow_c > 0:
-            precip_parts.append(f"Snow chance {snow_c}%")
+            precip_parts.append(f"降雪概率 {snow_c}%")
 
         if not precip_parts:
             precip_str = ""
@@ -459,13 +459,13 @@ class OpenMeteoWidget(BaseWidget):
             precip_str = " \u2022 ".join(precip_parts) + " \u2022 "
 
         today_label1 = QLabel(
-            f"Feels like {self._weather_data['{feelslike}']} \u2022 "
+            f"体感 {self._weather_data['{feelslike}']} \u2022 "
             f"{self._weather_data['{condition_text}']} \u2022 "
-            f"Humidity {self._weather_data['{humidity}']} \u2022 "
-            f"Pressure {self._weather_data['{pressure}']}\n"
-            f"Cloud {self._weather_data['{cloud}']}% \u2022 "
+            f"湿度 {self._weather_data['{humidity}']} \u2022 "
+            f"气压 {self._weather_data['{pressure}']}\n"
+            f"云量 {self._weather_data['{cloud}']}% \u2022 "
             f"{precip_str}"
-            f"UV Index {self._weather_data['{uv}']}"
+            f"紫外线指数 {self._weather_data['{uv}']}"
         )
         today_label1.setProperty("class", "label")
         today_label1.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -520,9 +520,9 @@ class OpenMeteoWidget(BaseWidget):
             frame_day.setProperty("class", "open-meteo-card-day")
 
             if i == 0:
-                day_text = "Today"
+                day_text = "今天"
             elif i == 1:
-                day_text = "Tomorrow"
+                day_text = "明天"
             else:
                 day_text = self._weather_data.get(f"{{day{i}_full_name}}", "")
             min_temp = self._weather_data[f"{{day{i}_min_temp}}"]
@@ -615,7 +615,7 @@ class OpenMeteoWidget(BaseWidget):
             instance._location_data = None
             instance._hourly_data = [[] for _ in range(instance.config.forecast_days)]
             instance._current_time = None
-            instance._set_label_text("Setup location")
+            instance._set_label_text("设置位置")
 
         # Reopen the popup with the location setup UI
         self._popup_card()
@@ -659,8 +659,8 @@ class OpenMeteoWidget(BaseWidget):
 
         if self.config.tooltip:
             tooltip = (
-                f"<strong>{self._weather_data['{location}']}</strong><br><br>Temperature<br>"
-                f"Min {self._weather_data['{min_temp}']} / Max {self._weather_data['{max_temp}']}"
+                f"<strong>{self._weather_data['{location}']}</strong><br><br>温度<br>"
+                f"最低 {self._weather_data['{min_temp}']} / 最高 {self._weather_data['{max_temp}']}"
             )
             set_tooltip(self, tooltip)
 
@@ -791,9 +791,9 @@ class OpenMeteoWidget(BaseWidget):
 
             daily_uv = daily.get("uv_index_max", [])
 
-            location_name = "Unknown"
+            location_name = "未知"
             if self._location_data:
-                location_name = self._location_data.get("name", "Unknown")
+                location_name = self._location_data.get("name", "未知")
 
             today_precip_prob = hourly_precip_prob[:24] if hourly_precip_prob else []
             today_rain_vol = hourly_rain_vol[:24] if hourly_rain_vol else []
@@ -823,7 +823,7 @@ class OpenMeteoWidget(BaseWidget):
                 "{precipitation}": f"{current.get('precipitation', 0)} mm",
                 "{wind}": fmt_wind(current.get("wind_speed_10m", 0)),
                 "{wind_dir}": f"{current.get('wind_direction_10m', 0)}°",
-                "{is_day}": "Day" if is_day else "Night",
+                "{is_day}": "白天" if is_day else "夜晚",
                 "{condition_text}": condition_text,
                 "{icon}": icon_class,
                 "{icon_class}": icon_class,
