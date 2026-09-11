@@ -123,7 +123,7 @@ class UpdateCheckWidget(BaseWidget):
             idx += 1
 
         if cfg.tooltip:
-            title = {"winget": "Winget Update", "scoop": "Scoop Update", "windows": "Windows Update"}.get(
+            title = {"winget": "Winget 更新", "scoop": "Scoop 更新", "windows": "Windows 更新"}.get(
                 source, source
             )
             # Truncate long Windows update names
