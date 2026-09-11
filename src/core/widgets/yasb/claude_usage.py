@@ -16,11 +16,11 @@ from core.widgets.services.claude_usage.status import STATUS_LEVELS, ClaudeStatu
 from core.widgets.services.claude_usage.token_history import TokenHistoryService, summarize
 
 _TOKEN_PERIODS: list[tuple[str, str]] = [
-    ("session", "Session"),
-    ("today", "Today"),
-    ("week", "Week"),
-    ("month", "Month"),
-    ("year", "Year"),
+    ("session", "会话"),
+    ("today", "今天"),
+    ("week", "本周"),
+    ("month", "本月"),
+    ("year", "今年"),
 ]
 _EMPTY_TOKEN_SUMMARY: dict[str, Any] = {
     "totals": {},
@@ -196,7 +196,7 @@ class ClaudeUsageWidget(BaseWidget):
             return
         try:
             self._status_dot.setProperty("class", f"dot {self._status_level()}")
-            self._status_text_label.setText(self._status.get("description", "") or "Status unavailable")
+            self._status_text_label.setText(self._status.get("description", "") or "状态不可用")
             refresh_widget_style(self._status_dot, self._status_text_label)
         except RuntimeError:
             self._status_dot = None
@@ -328,9 +328,9 @@ class ClaudeUsageWidget(BaseWidget):
         """Reset line for the popup footer, phrased per the window's reset_format."""
         if reset_format == "absolute":
             value = self._fmt_weekday(iso, with_date=self.config.reset_show_date)
-            return f"Resets on {value}" if value != "--" else "Reset time unknown"
+            return f"于 {value} 重置" if value != "--" else "重置时间未知"
         value = self._fmt_duration(iso)
-        return f"Resets in {value}" if value != "--" else "Reset time unknown"
+        return f"{value} 后重置" if value != "--" else "重置时间未知"
 
     @staticmethod
     def _fmt_reset_at(iso: str | None) -> str:
@@ -392,9 +392,9 @@ class ClaudeUsageWidget(BaseWidget):
                 base = " ".join(t for t in base.split() if t not in STATUS_LEVELS)
                 current_widget.setProperty("class", f"{base} {self._status_level()}")
             if self.config.tooltip:
-                tip = f"Claude usage - 5h: {values['five_hour']}% · 7d: {values['seven_day']}%"
+                tip = f"Claude 用量 - 5 小时：{values['five_hour']}% · 7 天：{values['seven_day']}%"
                 if self._data.get("token_expired"):
-                    tip += "\nToken expired - run `claude -p` to refresh"
+                    tip += "\n令牌已过期 - 运行 `claude -p` 刷新"
                 set_tooltip(current_widget, tip)
         refresh_widget_style(*active_widgets)
 
@@ -429,7 +429,7 @@ class ClaudeUsageWidget(BaseWidget):
         value = self._data.get(window)
         raw = self._data.get(f"{window}_raw")
         reset_iso = self._data.get(f"{window}_reset_iso")
-        return self._build_bar_frame(window, f"{title} Window", value, raw, reset_iso, reset_format)
+        return self._build_bar_frame(window, f"{title} 窗口", value, raw, reset_iso, reset_format)
 
     def _build_scoped_sections(self) -> list[QFrame]:
         """One extra bar per per-model weekly cap (e.g. Fable) the API reports in ``limits[]``.
@@ -444,7 +444,7 @@ class ClaudeUsageWidget(BaseWidget):
         return [
             self._build_bar_frame(
                 f"scoped:{s['name']}",
-                f"{s['name']} Weekly",
+                f"{s['name']} 每周",
                 s["value"],
                 s["raw"],
                 s["reset_iso"],
@@ -516,7 +516,7 @@ class ClaudeUsageWidget(BaseWidget):
             container_layout = QVBoxLayout(self._model_container)
             container_layout.setContentsMargins(0, 0, 0, 0)
             container_layout.setSpacing(0)
-            model_title = QLabel("Models")
+            model_title = QLabel("模型")
             model_title.setProperty("class", "title")
             container_layout.addWidget(model_title)
             rows = QFrame()
@@ -532,7 +532,7 @@ class ClaudeUsageWidget(BaseWidget):
             self._model_container = None
             self._model_layout = None
 
-        title_label = QLabel("Tokens")
+        title_label = QLabel("令牌")
         title_label.setProperty("class", "title")
         layout.addWidget(title_label)
 
@@ -642,8 +642,8 @@ class ClaudeUsageWidget(BaseWidget):
     def _add_menu_sections(self, layout: QVBoxLayout) -> None:
         self._section_widgets = {}
         self._usage_frames = [
-            self._build_section("five", "5-Hour", self.config.five_hour_reset_format),
-            self._build_section("seven", "7-Day", self.config.seven_day_reset_format),
+            self._build_section("five", "5 小时", self.config.five_hour_reset_format),
+            self._build_section("seven", "7 天", self.config.seven_day_reset_format),
             *self._build_scoped_sections(),
         ]
         for frame in self._usage_frames:
@@ -712,26 +712,26 @@ class ClaudeUsageWidget(BaseWidget):
         header_layout.setContentsMargins(0, 0, 0, 0)
         header_layout.setSpacing(0)
 
-        title_label = QLabel("Claude Usage")
+        title_label = QLabel("Claude 用量")
         title_label.setProperty("class", "text")
         header_layout.addWidget(title_label)
         header_layout.addStretch()
 
         refresh_btn = QPushButton("\U000f0450")
         refresh_btn.setProperty("class", "refresh")
-        set_tooltip(refresh_btn, "Refresh now")
+        set_tooltip(refresh_btn, "立即刷新")
         refresh_btn.clicked.connect(self._refresh)
         header_layout.addWidget(refresh_btn)
 
         pin_btn = QPushButton(self.config.menu.pin_icon)
         pin_btn.setCheckable(True)
         pin_btn.setProperty("class", "pin-btn")
-        set_tooltip(pin_btn, "Pin this window")
+        set_tooltip(pin_btn, "固定此窗口")
 
         def on_pin_toggled(checked: bool) -> None:
             pin_btn.setText(self.config.menu.unpin_icon if checked else self.config.menu.pin_icon)
             pin_btn.setProperty("class", "pin-btn pinned" if checked else "pin-btn")
-            set_tooltip(pin_btn, "Unpin this window" if checked else "Pin this window")
+            set_tooltip(pin_btn, "取消固定此窗口" if checked else "固定此窗口")
             refresh_widget_style(pin_btn)
             self._menu.set_pinned(checked)
 
