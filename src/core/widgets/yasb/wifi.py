@@ -27,7 +27,7 @@ class WifiWidget(BaseWidget):
         self._ethernet_active = False
         self._wifi_menu = WifiMenu(self, self.config.menu_config)
 
-        self._cached_wifi_info = WiFiInfo(0, "Disconnected", -1)
+        self._cached_wifi_info = WiFiInfo(0, "已断开", -1)
 
         # Worker thread that will fetch wifi info on an interval
         self._wifi_worker = WiFiWorker(self.config.get_exact_wifi_strength, self.config.update_interval)
@@ -134,7 +134,7 @@ class WifiWidget(BaseWidget):
                     self.hide()
                     return
                 wifi_icon = self.config.ethernet_icon
-                wifi_name = "Ethernet"
+                wifi_name = "以太网"
                 wifi_strength = "N/A"
 
         except Exception as e:
