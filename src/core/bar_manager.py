@@ -1,83 +1,68 @@
 import logging
-import uuid
-from contextlib import suppress
+import os
+import shutil
+import threading
+from pathlib import Path
+from typing import Optional
 
-from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot
-from PyQt6.QtGui import QScreen
-from PyQt6.QtWidgets import QApplication
-from qt_css_engine import TransitionEngine, extract_rules
+from PyQt6.QtCore import QObject, QScreen, pyqtSignal, pyqtSlot
+from PyQt6.QtGui import QGuiApplication
 
 from core.bar import Bar
-from core.bar_helper import GlobalState
-from core.config import get_config, get_stylesheet
-from core.events.service import EventService
+from core.config import AppConfig
 from core.utils.controller import reload_application
-from core.utils.utilities import get_screen_by_name
-from core.utils.widget_builder import WidgetBuilder
-from core.utils.win32.hotkeys import (
-    HotkeyBinding,
-    HotkeyDispatcher,
-    HotkeyListener,
-    collect_widget_keybindings,
-)
-from core.validation.bar import BarConfig
-from core.validation.config import YasbConfig
+from core.utils.watcher import ConfigWatcher
+from core.widgets.base import WidgetBase
 
 
 class BarManager(QObject):
-    styles_modified = pyqtSignal()
-    config_modified = pyqtSignal()
+    bar_ready_signal = pyqtSignal(object)
 
-    def __init__(self, config: YasbConfig, stylesheet: str):
+    def __init__(self, config: AppConfig):
         super().__init__()
         self.config = config
-        self.stylesheet, self.rules = extract_rules(stylesheet)
-        self.animation_engine = TransitionEngine(self.rules)
-        GlobalState.set_stylesheet(self.stylesheet)
-        GlobalState.set_tooltip_options(self.config.tooltip)
-        self.event_service = EventService()
-        self.widget_event_listeners = set()
-        self.bars: list[Bar] = []
-        self.config.bars = {n: bar for n, bar in self.config.bars.items() if bar.enabled}
-        self._threads = {}
-        self._active_listeners = {}
-        self._widget_builder = WidgetBuilder(self.config.widgets)
-        self._prev_listeners = set()
-        self._hotkey_listener: HotkeyListener | None = None
-        self._hotkey_dispatcher: HotkeyDispatcher | None = None
-        self._collected_keybindings: list[HotkeyBinding] = []
-        self._registered_hotkey_widgets: set[tuple[str, str]] = set()  # (widget_name, screen_name)
+        self.bars = []
+        self.widget_event_listeners = []
+        self.logger = logging.getLogger(__name__)
+        self._reload_lock = threading.Lock()
+        self._watch_config = None
+        self._watch_stylesheet = None
+        self._screen_change_timer = None
+        self._init_config_watchers()
 
-        self.styles_modified.connect(self.on_styles_modified)
-        self.config_modified.connect(self.on_config_modified)
-        self._app = QApplication.instance()
-        self._app.installEventFilter(self.animation_engine)
-        self._app.aboutToQuit.connect(self.stop_listener_threads)
-        self._app.screenAdded.connect(self.on_screens_update)
-        self._app.screenRemoved.connect(self.on_screens_update)
+    @property
+    def config_watchers(self):
+        return self._watch_config, self._watch_stylesheet
+
+    def _init_config_watchers(self):
+        watch_config = self.config.watch_config
+        watch_stylesheet = self.config.watch_stylesheet
+        if watch_config:
+            self._watch_config = ConfigWatcher(self.config.config_path, self._on_config_changed, delay=300)
+        if watch_stylesheet:
+            self._watch_stylesheet = ConfigWatcher(
+                self.config.stylesheet_path, self._on_stylesheet_changed, delay=300
+            )
 
     def _disconnect_reload_signals(self):
-        with suppress(TypeError):
-            self._app.screenAdded.disconnect(self.on_screens_update)
-            self._app.screenRemoved.disconnect(self.on_screens_update)
-            self.config_modified.disconnect(self.on_config_modified)
+        if self._watch_config:
+            self._watch_config.stop()
+            self._watch_config = None
+        if self._watch_stylesheet:
+            self._watch_stylesheet.stop()
+            self._watch_stylesheet = None
 
-    @pyqtSlot()
-    def on_styles_modified(self):
-        stylesheet = get_stylesheet(show_error_dialog=True)
-        if stylesheet and (stylesheet != self.stylesheet):
-            self.stylesheet, new_rules = extract_rules(stylesheet)
-            GlobalState.set_stylesheet(self.stylesheet)
-            self.animation_engine.reload_rules(new_rules)
-            for bar in self.bars:
-                bar.setStyleSheet(self.stylesheet)
+    def _on_stylesheet_changed(self):
+        self.logger.info("Stylesheet changed. Reapplying styles.")
+        for bar in self.bars:
+            bar.reload_styles()
 
-    @pyqtSlot()
-    def on_config_modified(self):
+    def _on_config_changed(self):
+        config_path = self.config.config_path
         try:
-            config = get_config(show_error_dialog=True)
+            config = AppConfig.load(config_path)
         except Exception as e:
-            logging.error("Error loading config: %s", e)
+            self.logger.error("Error loading config: %s", e)
             return
         if config and (config != self.config):
             # Fields that don't trigger a full application reload
@@ -86,7 +71,7 @@ class BarManager(QObject):
             if config.model_dump(exclude=exclude) != self.config.model_dump(exclude=exclude):
                 self.config = config
                 self._disconnect_reload_signals()
-                reload_application("Reloading Application because of config change.")
+                reload_application("配置变更，正在重载应用...")
             else:
                 self.config = config
                 logging.info("Configuration updated (no reload required).")
@@ -96,184 +81,34 @@ class BarManager(QObject):
     def on_screens_update(self, _screen: QScreen) -> None:
         logging.info("Screens updated. Re-initialising all bars.")
         self._disconnect_reload_signals()
-        reload_application("Reloading Application because of screen update.")
+        reload_application("屏幕更新，正在重载应用...")
 
     def run_listeners_in_threads(self):
         for listener in self.widget_event_listeners:
             logging.info("Starting %s...", listener.__name__)
             thread = listener()
             thread.start()
-            self._threads[listener] = thread
 
-    def stop_listener_threads(self):
-        # Stop hotkey listener first
-        if self._hotkey_listener is not None:
-            logging.info("Stopping HotkeyListener...")
-            with suppress(Exception):
-                self._hotkey_listener.stop()
-                self._hotkey_listener.wait(1000)
-            self._hotkey_listener = None
-            self._hotkey_dispatcher = None
+    def add_bar(self, bar: Bar):
+        self.bars.append(bar)
+        self.logger.debug("Bar added: %s", bar)
 
-        for listener in self.widget_event_listeners:
-            logging.info("Stopping %s...", listener.__name__)
-            with suppress(KeyError):
-                thread = self._threads[listener]
-                if hasattr(thread, "stop"):
-                    try:
-                        thread.stop()
-                    except Exception as e:
-                        logging.debug("Thread stop() raised for %s: %s", listener.__name__, e)
-                if hasattr(thread, "quit"):
-                    try:
-                        thread.quit()
-                    except Exception:
-                        pass
-                thread.wait(1000)
-        self._threads.clear()
-        self.widget_event_listeners.clear()
+    def remove_bar(self, bar: Bar):
+        if bar in self.bars:
+            self.bars.remove(bar)
+            self.logger.debug("Bar removed: %s", bar)
 
-    def initialize_bars(self, init: bool = False) -> None:
-        self._widget_builder = WidgetBuilder(self.config.widgets)
-        primary_screen = QApplication.primaryScreen()
-        primary_screen_name = primary_screen.name() if primary_screen else None
+    def create_bars(self):
+        for bar_config in self.config.bars:
+            bar = Bar(bar_config, self)
+            self.bars.append(bar)
+            self.bar_ready_signal.emit(bar)
 
-        available_screens = QApplication.screens()
-        available_screen_names = [screen.name() for screen in available_screens]
+    def stop(self):
+        self._disconnect_reload_signals()
+        for bar in self.bars:
+            bar.stop()
 
-        # Collect explicitly assigned screens
-        assigned_screens: set[str] = set()
-        for bar_config in self.config.bars.values():
-            if bar_config.screens != ["*"] and bar_config.screens != ["**"]:
-                for screen in bar_config.screens:
-                    resolved_name = primary_screen_name if screen == "primary" else screen
-                    if resolved_name not in available_screen_names:
-                        logging.warning("Screen '%s' from config not found among connected screens.", resolved_name)
-                        continue
-                    assigned_screens.add(resolved_name)
-
-        # Create bars
-        initialized_screens: set[str] = set()
-        for bar_name, bar_config in self.config.bars.items():
-            if bar_config.screens == ["*"]:
-                for screen in available_screens:
-                    if screen.name() in assigned_screens:
-                        continue
-                    self.create_bar(bar_config, bar_name, screen, init)
-                    initialized_screens.add(screen.name())
-            elif bar_config.screens == ["**"]:
-                for screen in available_screens:
-                    self.create_bar(bar_config, bar_name, screen, init)
-                    initialized_screens.add(screen.name())
-            else:
-                for screen_name in bar_config.screens:
-                    resolved_name = primary_screen_name if screen_name == "primary" else screen_name
-                    if resolved_name not in available_screen_names:
-                        logging.warning("Screen '%s' from config not found among connected screens.", resolved_name)
-                        continue
-                    screen = get_screen_by_name(resolved_name)
-                    if screen:
-                        self.create_bar(bar_config, bar_name, screen, init)
-                        initialized_screens.add(screen.name())
-
-        self._initialized_screens = initialized_screens
-        self._collect_keybindings()
-        self._start_hotkey_listener()
+    def run(self):
+        self.create_bars()
         self.run_listeners_in_threads()
-        self._widget_builder.raise_alerts_if_errors_present()
-
-    def _collect_keybindings(self) -> None:
-        """Collect keybindings from widget configurations used in enabled bars."""
-        self._collected_keybindings.clear()
-        seen_hotkeys: dict[str, str] = {}
-
-        active_widget_names: set[str] = set()
-        for bar_config in self.config.bars.values():
-            if bar_config.enabled:
-                widgets = bar_config.widgets
-                active_widget_names.update(widgets.left + widgets.center + widgets.right)
-
-        for widget_name, widget_config in self.config.widgets.items():
-            # If this is an active grouper, its children are rendered too.
-            if widget_name in active_widget_names and widget_config.get("type", "").endswith("grouper.GrouperWidget"):
-                active_widget_names.update(widget_config.get("options", {}).get("widgets", []))
-
-            if widget_name not in active_widget_names:
-                continue
-
-            options = widget_config.get("options", {})
-            keybindings = options.get("keybindings", [])
-
-            if not keybindings:
-                continue
-
-            bindings = collect_widget_keybindings(widget_name, keybindings)
-
-            for binding in bindings:
-                # Check for conflicts
-                hotkey_lower = binding.hotkey.lower()
-                if hotkey_lower in seen_hotkeys:
-                    existing_widget = seen_hotkeys[hotkey_lower]
-                    logging.warning(
-                        "Hotkey conflict: '%s' is already assigned to '%s', overriding with '%s'",
-                        binding.hotkey,
-                        existing_widget,
-                        widget_name,
-                    )
-                    # Remove the old binding so the new one actually takes effect
-                    self._collected_keybindings = [
-                        b for b in self._collected_keybindings if b.hotkey.lower() != hotkey_lower
-                    ]
-                seen_hotkeys[hotkey_lower] = widget_name
-                self._collected_keybindings.append(binding)
-
-    def _start_hotkey_listener(self) -> None:
-        """Start the hotkey listener if keybindings are configured."""
-        if not self._collected_keybindings:
-            return
-
-        self._hotkey_dispatcher = HotkeyDispatcher()
-        self._hotkey_listener = HotkeyListener(
-            self._collected_keybindings,
-            self._hotkey_dispatcher,
-            self._initialized_screens,
-        )
-        self._hotkey_listener.start()
-        logging.info("Starting HotkeyListener...")
-
-    def create_bar(self, config: BarConfig, name: str, screen: QScreen, init: bool = False) -> None:
-        screen_name = screen.name().replace("\\", "").replace(".", "")
-        bar_id = f"{name}_{screen_name}_{str(uuid.uuid4())[:8]}"
-        bar_widgets, widget_event_listeners = self._widget_builder.build_widgets(config.widgets.model_dump())
-
-        # Set screen_name on all widgets and disable duplicate hotkey handlers
-        widgets_with_keybindings = {
-            name for name, cfg in self.config.widgets.items() if cfg.get("options", {}).get("keybindings")
-        }
-        for widget_list in bar_widgets.values():
-            for widget in widget_list:
-                widget.screen_name = screen.name()
-                if widget.widget_name in widgets_with_keybindings:
-                    key = (widget.widget_name, screen.name())
-                    if key in self._registered_hotkey_widgets:
-                        widget._hotkey_enabled = False
-                        logging.info(
-                            "%s on screen %s already has hotkey handler registered from another bar.",
-                            widget.widget_name,
-                            screen.name(),
-                        )
-                    else:
-                        self._registered_hotkey_widgets.add(key)
-
-        self.widget_event_listeners = self.widget_event_listeners.union(widget_event_listeners)
-        self.bars.append(
-            Bar(
-                bar_id=bar_id,
-                bar_name=name,
-                bar_screen=screen,
-                stylesheet=self.stylesheet,
-                widgets=bar_widgets,
-                config=config,
-                init=init,
-            )
-        )

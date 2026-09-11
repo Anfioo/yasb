@@ -13,7 +13,7 @@ from core.utils.cli_server import CliPipeHandler
 _reload_lock = threading.Lock()
 
 
-def reload_application(msg: str = "Reloading Application..."):
+def reload_application(msg: str = "正在重载应用..."):
     if not _reload_lock.acquire(blocking=False):
         logging.warning("Reload already in progress, ignoring additional reload request.")
         return
@@ -39,7 +39,7 @@ def reload_application(msg: str = "Reloading Application..."):
         os._exit(0)
 
 
-def exit_application(msg: str = "Exiting Application..."):
+def exit_application(msg: str = "正在退出应用..."):
     logging.info(msg)
     try:
         if hasattr(sys, "_cli_pipe_handler") and sys._cli_pipe_handler is not None:
@@ -74,10 +74,10 @@ def process_cli_command(command: str):
         screen_name = command.split("-s", 1)[1].strip()
 
     if base_command == "reload":
-        reload_application("Reloading Application from CLI...")
+        reload_application("正在从 CLI 重载应用...")
 
     elif base_command == "stop":
-        exit_application("Exiting Application from CLI...")
+        exit_application("正在从 CLI 退出应用...")
 
     elif base_command in ["show-bar", "hide-bar", "toggle-bar"]:
         action = base_command.split("-")[0]
