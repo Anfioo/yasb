@@ -104,7 +104,7 @@ class InfoBar(QFrame):
     """Inline notification bar with severity icon, title, and message.
 
     Args:
-        title: Bold heading text (e.g. "Title").
+        title: Bold heading text (e.g. "标题").
         message: The notification text.
         severity: One of ``InfoBarSeverity`` values. Default is informational.
         parent: Parent widget.
