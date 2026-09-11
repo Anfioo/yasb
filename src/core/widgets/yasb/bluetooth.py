@@ -150,7 +150,7 @@ class BluetoothWidget(BaseWidget):
                     for device in connected_devices
                 ]
             device_names = self.config.label_device_separator.join(connected_devices)
-            tooltip_text = "Connected devices\n" + "\n".join(f"• {name}" for name in connected_devices)
+            tooltip_text = "已连接的设备\n" + "\n".join(f"• {name}" for name in connected_devices)
         else:
             device_names = self.config.label_no_device
             tooltip_text = self.config.label_no_device

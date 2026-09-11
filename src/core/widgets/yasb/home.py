@@ -29,14 +29,14 @@ class HomeWidget(BaseWidget):
     def create_menu_action(self, menu_item: MenuItemConfig):
         action_keys = [key for key in ("command", "uri", "path") if getattr(menu_item, key, None)]
         if len(action_keys) > 1:
-            return lambda: logging.error("Home menu item must define only one of: 'path', 'uri', or 'command'.")
+            return lambda: logging.error("主页菜单项只能定义 'path'、'uri' 或 'command' 中的一个。")
         if len(action_keys) == 0:
-            return lambda: logging.error("Home menu item missing 'path', 'uri', or 'command'.")
+            return lambda: logging.error("主页菜单项缺少 'path'、'uri' 或 'command'。")
 
         if menu_item.command:
             command = menu_item.command
             if not command:
-                return lambda: logging.error("Home menu item missing 'command'.")
+                return lambda: logging.error("主页菜单项缺少 'command'。")
 
             args = menu_item.args
             shell = menu_item.shell
@@ -56,18 +56,18 @@ class HomeWidget(BaseWidget):
         if menu_item.uri:
             uri = menu_item.uri
             if not uri:
-                return lambda: logging.error("Home menu item missing 'uri'.")
+                return lambda: logging.error("主页菜单项缺少 'uri'。")
             return lambda: os.startfile(uri)
 
         if menu_item.path:
             path = menu_item.path
             if not path:
-                return lambda: logging.error("Home menu item missing 'path'.")
+                return lambda: logging.error("主页菜单项缺少 'path'。")
             path = os.path.expanduser(path)
             return lambda: (
                 os.startfile(path)
                 if os.path.exists(path)
-                else logging.error("The system cannot find the file specified: '%s'", path)
+                else logging.error("系统找不到指定的文件：'%s'", path)
             )
 
     def _create_menu(self):
