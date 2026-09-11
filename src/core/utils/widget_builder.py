@@ -83,7 +83,7 @@ class WidgetBuilder(QObject):
                     widget = widget_cls(config=pydantic_config)
                 widget.widget_name = widget_name
                 return widget
-            except AttributeError, ValueError, ModuleNotFoundError:
+            except (AttributeError, ValueError, ModuleNotFoundError):
                 logging.exception("Failed to import widget with type %s", widget_config["type"])
                 self._invalid_widget_types[widget_name] = widget_config["type"]
             except KeyError:

@@ -357,7 +357,7 @@ class CodexUsageWidget(BaseWidget):
             text = re.sub(r"<span.*?>|</span>", "", part).strip() if "<span" in part else part.strip()
             try:
                 rendered = text.format(**values)
-            except KeyError, ValueError:
+            except (KeyError, ValueError):
                 rendered = text
             widget.setText(rendered)
             widget.setVisible(bool(rendered))

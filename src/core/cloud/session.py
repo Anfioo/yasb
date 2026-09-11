@@ -91,7 +91,7 @@ class Session:
             master_key = self.master_key
             if raw := payload.get("master_key"):
                 master_key = base64.b64decode(raw)
-        except AttributeError, TypeError, ValueError:
+        except (AttributeError, TypeError, ValueError):
             return False
 
         if not tokens.access_token:
@@ -131,7 +131,7 @@ class Session:
             (self.directory / SESSION_FILE).write_bytes(protect(blob, DPAPI_SESSION_ENTROPY))
             if self.master_key is not None:
                 (self.directory / VAULT_FILE).write_bytes(protect(self.master_key, DPAPI_VAULT_ENTROPY))
-        except CloudError, OSError:
+        except (CloudError, OSError):
             # A cache that will not write is not a failed sign-in. It costs one next launch.
             pass
 
@@ -150,7 +150,7 @@ class Session:
             self.tokens = Tokens.from_json(json.loads(unprotect(session_path.read_bytes(), DPAPI_SESSION_ENTROPY)))
             if vault_path.is_file():
                 self.master_key = unprotect(vault_path.read_bytes(), DPAPI_VAULT_ENTROPY)
-        except CloudError, OSError, ValueError:
+        except (CloudError, OSError, ValueError):
             self.sign_out()
             return False
 

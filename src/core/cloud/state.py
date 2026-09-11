@@ -27,7 +27,7 @@ def read_state() -> State:
     """
     try:
         data = json.loads(state_path().read_bytes())
-    except OSError, ValueError:
+    except (OSError, ValueError):
         return State()
     if not isinstance(data, dict):
         return State()

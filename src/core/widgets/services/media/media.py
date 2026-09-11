@@ -36,7 +36,7 @@ def _iref_float(value: Any, default: float = 1.0) -> float:
         return default
     try:
         result = float(value)
-    except TypeError, ValueError:
+    except (TypeError, ValueError):
         return default
     return result if result > 0 else default
 
@@ -46,7 +46,7 @@ def _iref_bool(value: Any, default: bool = False) -> bool:
         return default
     try:
         return bool(value)
-    except TypeError, ValueError:
+    except (TypeError, ValueError):
         return default
 
 
@@ -55,7 +55,7 @@ def _iref_int(value: Any, default: int = 0) -> int:
         return default
     try:
         return int(value)
-    except TypeError, ValueError:
+    except (TypeError, ValueError):
         return default
 
 
@@ -350,7 +350,7 @@ class WindowsMedia(QObject, metaclass=QSingleton):
 
         try:
             playback_status = int(playback.playback_status)
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             playback_status = 0
         is_playing = playback_status == 4
 

@@ -241,8 +241,8 @@ class UnitConverterProvider(BaseProvider):
     """Convert between units of measurement."""
 
     name = "unit_converter"
-    display_name = "Unit Converter"
-    input_placeholder = "Convert units, e.g. 10 kg to lb..."
+    display_name = "单位转换器"
+    input_placeholder = "转换单位，例如 10 kg 转 lb..."
     icon = ICON_UNIT
 
     def match(self, text: str) -> bool:
@@ -256,8 +256,8 @@ class UnitConverterProvider(BaseProvider):
         if not query:
             return [
                 ProviderResult(
-                    title="Unit Converter",
-                    description="e.g. 10 kg to lb, 100 mi to km, 72 f to c, 1 gb to mb",
+                    title="单位转换器",
+                    description="例如 10 kg 转 lb, 100 mi 转 km, 72 f 转 c, 1 gb 转 mb",
                     icon_char=ICON_UNIT,
                     provider=self.name,
                 )
@@ -267,8 +267,8 @@ class UnitConverterProvider(BaseProvider):
         if not m:
             return [
                 ProviderResult(
-                    title="Invalid format",
-                    description="Try: 10 kg to lb, 100 f to c, 500 mb to gb",
+                    title="格式无效",
+                    description="试试：10 kg 转 lb, 100 f 转 c, 500 mb 转 gb",
                     icon_char=ICON_UNIT,
                     provider=self.name,
                 )
@@ -292,8 +292,8 @@ class UnitConverterProvider(BaseProvider):
         if not info:
             return [
                 ProviderResult(
-                    title=f"Unknown unit: {from_unit}",
-                    description="Supported: length, weight, volume, speed, data, time, temperature",
+                    title=f"未知单位：{from_unit}",
+                    description="支持：长度、重量、体积、速度、数据、时间、温度",
                     icon_char=ICON_UNIT,
                     provider=self.name,
                 )
@@ -305,8 +305,8 @@ class UnitConverterProvider(BaseProvider):
             if not to_info or to_info[0] != cat_name:
                 return [
                     ProviderResult(
-                        title=f"Cannot convert {from_name} to {to_unit}",
-                        description=f"Both units must be in the same category ({cat_name})",
+                        title=f"无法将 {from_name} 转换为 {to_unit}",
+                        description=f"两个单位必须属于同一类别（{cat_name}）",
                         icon_char=ICON_UNIT,
                         provider=self.name,
                     )
@@ -317,7 +317,7 @@ class UnitConverterProvider(BaseProvider):
             return [
                 ProviderResult(
                     title=f"{display} {to_name}",
-                    description=f"{_format_number(value)} {from_name} - press Enter to copy",
+                    description=f"{_format_number(value)} {from_name} - 按 Enter 复制",
                     icon_char=ICON_UNIT,
                     provider=self.name,
                     action_data={"value": display},
@@ -333,7 +333,7 @@ class UnitConverterProvider(BaseProvider):
             results.append(
                 ProviderResult(
                     title=f"{display} {to_name}",
-                    description=f"{_format_number(value)} {from_name} - press Enter to copy",
+                    description=f"{_format_number(value)} {from_name} - 按 Enter 复制",
                     icon_char=ICON_UNIT,
                     provider=self.name,
                     action_data={"value": display},
@@ -352,7 +352,7 @@ class UnitConverterProvider(BaseProvider):
             return [
                 ProviderResult(
                     title=f"{display} {to_label}",
-                    description=f"{_format_number(value)} {from_label} - press Enter to copy",
+                    description=f"{_format_number(value)} {from_label} - 按 Enter 复制",
                     icon_char=ICON_UNIT,
                     provider=self.name,
                     action_data={"value": display},
@@ -367,7 +367,7 @@ class UnitConverterProvider(BaseProvider):
             results.append(
                 ProviderResult(
                     title=f"{display} {to_label}",
-                    description=f"{_format_number(value)} {from_label} - press Enter to copy",
+                    description=f"{_format_number(value)} {from_label} - 按 Enter 复制",
                     icon_char=ICON_UNIT,
                     provider=self.name,
                     action_data={"value": display},

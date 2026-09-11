@@ -282,7 +282,7 @@ class IconExtractorUtil:
                         if w * h > best_area:
                             best_area = w * h
                             best_frame = frame_idx
-                except EOFError, AttributeError:
+                except (EOFError, AttributeError):
                     pass
                 if best_frame is not None:
                     img.seek(best_frame)

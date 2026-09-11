@@ -68,7 +68,7 @@ def load() -> Settings:
     """Read the file, or return defaults. Never raises."""
     try:
         return Settings.from_json(json.loads(settings_path().read_bytes()))
-    except OSError, ValueError:
+    except (OSError, ValueError):
         return Settings()
 
 

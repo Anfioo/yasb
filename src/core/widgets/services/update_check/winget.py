@@ -253,7 +253,7 @@ def _parse_table(
                     value = value[:-1]
                 row[column_names[c]] = value
 
-        except IndexError, ValueError:
+        except (IndexError, ValueError):
             continue
 
         name = row.get("name", "")

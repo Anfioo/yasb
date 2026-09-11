@@ -285,7 +285,7 @@ class BarController:
                 capture_output=True,
                 timeout=BAR_COMMAND_TIMEOUT_S,
             )
-        except OSError, subprocess.SubprocessError:
+        except (OSError, subprocess.SubprocessError):
             return False
         return done.returncode == 0
 

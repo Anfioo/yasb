@@ -131,7 +131,7 @@ def _get_exe_description(exe_path: str) -> str | None:
             lp_buf = ctypes.c_wchar_p()
             u_len2 = ctypes.c_uint()
             if ctypes.windll.version.VerQueryValueW(
-                buf, f"{prefix}\{field}", ctypes.byref(lp_buf), ctypes.byref(u_len2)
+                buf, prefix + "\\" + field, ctypes.byref(lp_buf), ctypes.byref(u_len2)
             ):
                 val = lp_buf.value
                 if val:

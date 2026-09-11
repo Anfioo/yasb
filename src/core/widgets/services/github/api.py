@@ -551,5 +551,5 @@ class GitHubDataManager:
             identifier = parts[-1]
             number = int(identifier.split("?")[0])
             return owner, repo, number
-        except IndexError, ValueError:
+        except (IndexError, ValueError):
             return None

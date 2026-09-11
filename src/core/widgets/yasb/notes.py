@@ -539,7 +539,7 @@ class NotesWidget(BaseWidget):
                 date_label = QLabel(date_str)
                 date_label.setProperty("class", "date")
                 text_layout.addWidget(date_label)
-            except ValueError, TypeError:
+            except (ValueError, TypeError):
                 pass
 
         # text_container is Expanding, so it already pushes the buttons to the right

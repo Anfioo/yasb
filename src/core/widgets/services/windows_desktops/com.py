@@ -148,7 +148,7 @@ class VirtualDesktopApi:
         """Is the virtual desktop API usable at all on this machine?"""
         try:
             self._ensure()
-        except VirtualDesktopUnsupportedError, COMError, OSError, AttributeError:
+        except (VirtualDesktopUnsupportedError, COMError, OSError, AttributeError):
             logger.warning("Virtual desktop API unavailable", exc_info=True)
             return False
         return True

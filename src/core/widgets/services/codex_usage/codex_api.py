@@ -46,7 +46,7 @@ def _read_cache(path: str) -> dict[str, Any] | None:
         with open(path, encoding="utf-8") as cache_file:
             value = json.load(cache_file)
         return value if isinstance(value, dict) else None
-    except OSError, ValueError, TypeError:
+    except (OSError, ValueError, TypeError):
         return None
 
 
@@ -92,7 +92,7 @@ def _parse_token_file(path: Path) -> dict[str, Any]:
                     continue
                 try:
                     event = json.loads(line)
-                except ValueError, TypeError:
+                except (ValueError, TypeError):
                     continue
                 payload = event.get("payload")
                 if not isinstance(payload, dict):

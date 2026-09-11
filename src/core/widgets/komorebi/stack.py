@@ -266,7 +266,7 @@ class StackWidget(BaseWidget):
                         and not new_window_button.icon
                     ):
                         new_window_button.update_icon(ignore_cache=True)
-                except IndexError, TypeError:
+                except (IndexError, TypeError):
                     pass
 
             elif (

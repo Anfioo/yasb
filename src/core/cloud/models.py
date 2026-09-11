@@ -14,7 +14,7 @@ def _int(source: dict[str, Any], key: str, default: int = 0) -> int:
 def _b64(value: Any) -> bytes:
     try:
         return base64.b64decode(value or "")
-    except ValueError, TypeError:
+    except (ValueError, TypeError):
         return b""
 
 
@@ -132,7 +132,7 @@ class Snapshot:
 def parse_timestamp(value: str) -> datetime | None:
     try:
         return datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=UTC)
-    except ValueError, TypeError:
+    except (ValueError, TypeError):
         return None
 
 

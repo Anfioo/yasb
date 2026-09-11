@@ -88,7 +88,7 @@ def mark_in_sync(exclude: tuple[str, ...] = ()) -> None:
     """
     try:
         files = entries(exclude)
-    except SnapshotError, OSError:
+    except (SnapshotError, OSError):
         return
     current = signature(files)
     write_state(last_seen=current, last_backed_up=current, files=files)

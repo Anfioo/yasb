@@ -20,7 +20,7 @@ STATUS_URL = "https://status.claude.com/api/v2/status.json"
 # Indicator values an Atlassian Statuspage can report, worst-first.
 STATUS_LEVELS = ("critical", "major", "minor", "none", "unknown")
 
-EMPTY_STATUS: dict[str, Any] = {"indicator": "unknown", "description": "Status unavailable", "fetched_at": 0}
+EMPTY_STATUS: dict[str, Any] = {"indicator": "unknown", "description": "状态不可用", "fetched_at": 0}
 
 
 def fetch_status() -> dict[str, Any]:

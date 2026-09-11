@@ -88,7 +88,7 @@ class KomorebiEventListener(QThread):
 
                             if event and state:
                                 self._emit_event(event, state)
-                        except KeyError, ValueError:
+                        except (KeyError, ValueError):
                             logging.exception("Failed to parse komorebi state. Received data: %s", data)
                     except pywintypes.error as e:
                         if e.winerror == 109:  # ERROR_BROKEN_PIPE
@@ -96,7 +96,7 @@ class KomorebiEventListener(QThread):
                             break
                         else:
                             logging.exception("Unexpected error occurred: %s", e)
-            except BaseException, Exception:
+            except (BaseException, Exception):
                 logging.exception("Komorebi has disconnected from the named pipe %s", self.pipe_name)
             finally:
                 self._close_pipe()
