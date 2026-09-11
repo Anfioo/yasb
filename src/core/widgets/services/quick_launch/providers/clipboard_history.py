@@ -43,8 +43,8 @@ class ClipboardHistoryProvider(BaseProvider):
     """Browse and restore Windows Clipboard History entries."""
 
     name = "clipboard_history"
-    display_name = "Clipboard History"
-    input_placeholder = "Search clipboard history..."
+    display_name = "剪贴板历史"
+    input_placeholder = "搜索剪贴板历史..."
     icon = ICON_CLIPBOARD
 
     def __init__(self, config: dict | None = None):
@@ -160,13 +160,13 @@ class ClipboardHistoryProvider(BaseProvider):
                         full_text = text.strip()
                         if len(full_text) > 1500:
                             full_text = full_text[:1499] + "..."
-                        stats = f"{words} words, {chars} chars, {lines} lines"
+                        stats = f"{words} 个单词，{chars} 个字符，{lines} 行"
                         has_html = "HTML Format" in formats
-                        fmt_label = "Rich Text" if has_html else "Plain Text"
+                        fmt_label = "富文本" if has_html else "纯文本"
                         entry.update(
                             kind="text",
                             title=self._trim(text, 90),
-                            description=f"{fmt_label} - {words} words",
+                            description=f"{fmt_label} - {words} 个单词",
                             icon=ICON_CLIPBOARD_TEXT,
                             preview={
                                 "kind": "text",
@@ -186,16 +186,16 @@ class ClipboardHistoryProvider(BaseProvider):
                     stream_ref = content.get_bitmap_async().get()
                     if stream_ref:
                         blob, (w, h) = self._read_image_bytes(stream_ref)
-                        dim = f"{w}x{h}" if w and h else "Unknown"
+                        dim = f"{w}x{h}" if w and h else "未知"
                         size_label = f" - {self._format_bytes(len(blob))}" if blob else ""
                         entry.update(
                             kind="image",
-                            title=f"Image - {dim}",
-                            description=f"Bitmap{size_label}",
+                            title=f"图片 - {dim}",
+                            description=f"位图{size_label}",
                             icon=ICON_CLIPBOARD_IMAGE,
                             preview={
                                 "kind": "image",
-                                "title": f"Image - {dim}{size_label}",
+                                "title": f"图片 - {dim}{size_label}",
                                 "subtitle": f"{ts_full}\nDimension: {dim}\nFormats: {', '.join(formats)}",
                                 "image_data": blob,
                             },
@@ -208,8 +208,8 @@ class ClipboardHistoryProvider(BaseProvider):
             # Unknown format
             entry.update(
                 kind="unknown",
-                title="Clipboard item",
-                description="Unsupported format",
+                title="剪贴板项目",
+                description="不支持的格式",
                 icon=ICON_CLIPBOARD,
                 preview={},
             )
@@ -220,26 +220,26 @@ class ClipboardHistoryProvider(BaseProvider):
     def _status_result(self, status: str) -> list[ProviderResult]:
         messages = {
             "disabled": (
-                "Clipboard history is disabled",
-                "Open Settings > System > Clipboard to enable",
-                "Press Enter to open Windows Clipboard settings.",
+                "剪贴板历史已禁用",
+                "请打开设置 > 系统 > 剪贴板以启用",
+                "按回车打开 Windows 剪贴板设置。",
             ),
             "denied": (
-                "Clipboard access denied",
-                "Try again while YASB is focused",
-                "Windows denied clipboard history access in this context.",
+                "剪贴板访问被拒绝",
+                "请将焦点置于 YASB 后重试",
+                "Windows 在此上下文中拒绝了剪贴板历史访问。",
             ),
             "unavailable": (
-                "Clipboard API unavailable",
-                "WinRT DataTransfer package missing or unsupported OS",
-                "The WinRT clipboard API is not available.",
+                "剪贴板 API 不可用",
+                "缺少 WinRT DataTransfer 包或操作系统不受支持",
+                "WinRT 剪贴板 API 不可用。",
             ),
         }
         title, desc, _ = messages.get(
             status,
             (
-                "Unable to read clipboard history",
-                "Try again in a moment",
+                "无法读取剪贴板历史",
+                "请稍后再试",
                 "",
             ),
         )
@@ -256,8 +256,8 @@ class ClipboardHistoryProvider(BaseProvider):
     def _clear_results(self) -> list[ProviderResult]:
         return [
             ProviderResult(
-                title="Clear clipboard history",
-                description="Delete all saved history items",
+                title="清除剪贴板历史",
+                description="删除所有保存的历史项目",
                 icon_char=ICON_CLEAR,
                 provider=self.name,
                 action_data={"action": "clear_history"},
@@ -280,8 +280,8 @@ class ClipboardHistoryProvider(BaseProvider):
         if not items:
             return [
                 ProviderResult(
-                    title="Clipboard history is empty",
-                    description="Copy something to start",
+                    title="剪贴板历史为空",
+                    description="复制一些内容以开始",
                     icon_char=ICON_CLIPBOARD,
                     provider=self.name,
                 )
@@ -311,8 +311,8 @@ class ClipboardHistoryProvider(BaseProvider):
         if not results:
             return [
                 ProviderResult(
-                    title="No clipboard matches",
-                    description="Try a different search term",
+                    title="没有匹配的剪贴板内容",
+                    description="请尝试其他搜索词",
                     icon_char=ICON_CLIPBOARD,
                     provider=self.name,
                 )
@@ -360,9 +360,9 @@ class ClipboardHistoryProvider(BaseProvider):
         action = result.action_data.get("action")
         if action != "restore":
             return []
-        actions = [ProviderMenuAction(id="copy", label="Copy to clipboard")]
+        actions = [ProviderMenuAction(id="copy", label="复制到剪贴板")]
         if Clipboard is not None:
-            actions.append(ProviderMenuAction(id="delete", label="Delete from history", separator_before=True))
+            actions.append(ProviderMenuAction(id="delete", label="从历史中删除", separator_before=True))
         return actions
 
     def execute_context_menu_action(self, action_id: str, result: ProviderResult) -> ProviderMenuActionResult:
