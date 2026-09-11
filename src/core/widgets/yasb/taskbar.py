@@ -709,7 +709,7 @@ class TaskbarWidget(BaseWidget):
             return  # App is already running
 
         pseudo_hwnd = -(abs(hash(unique_id)) % 1000000000 + 1000000000)
-        title = metadata.get("title", "App")
+        title = metadata.get("title", "应用")
 
         # Always use _load_cached_icon - it handles Recycle Bin caching internally
         icon = self._load_cached_icon(unique_id)
@@ -744,7 +744,7 @@ class TaskbarWidget(BaseWidget):
 
         metadata = self._pin_manager.pinned_apps[unique_id]
         pseudo_hwnd = -(abs(hash(unique_id)) % 1000000000 + 1000000000)
-        title = metadata.get("title", "App")
+        title = metadata.get("title", "应用")
         icon = self._load_cached_icon(unique_id)
 
         container = self._create_pinned_app_container(title, icon, pseudo_hwnd, unique_id)
@@ -1107,7 +1107,7 @@ class TaskbarWidget(BaseWidget):
                         if not already_displayed:
                             # Create the pinned button
                             pseudo_hwnd = -(abs(hash(unique_id)) % 1000000000 + 1000000000)
-                            title = metadata.get("title", "App")
+                            title = metadata.get("title", "应用")
                             icon = self._load_cached_icon(unique_id)
 
                             container = self._create_pinned_app_container(title, icon, pseudo_hwnd, unique_id)
