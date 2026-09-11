@@ -59,7 +59,7 @@ class GlucoseMonitorWorker(QThread):
                 resp_json["direction"],
             )
         except Exception:
-            self.error_signal.emit("Connection error")
+            self.error_signal.emit("连接错误")
 
 
 class GlucoseMonitor(BaseWidget):
@@ -113,7 +113,7 @@ class GlucoseMonitor(BaseWidget):
         secret = self.config.secret != "env" and self.config.secret or os.getenv(self.config.secret_env_name)
 
         if not secret:
-            self._error_message = "Missing Secret"
+            self._error_message = "缺少密钥"
             self._update_label()
         else:
             self._worker = GlucoseMonitorWorker.get_instance()
@@ -182,7 +182,7 @@ class GlucoseMonitor(BaseWidget):
 
         if self.config.notify_on_error and not prev_error_message:
             toaster = ToastNotifier()
-            toaster.show(self._icon_path, "Glucose Monitor", message)
+            toaster.show(self._icon_path, "血糖监测", message)
 
     def _handle_status_update(
         self,
