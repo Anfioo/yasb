@@ -223,7 +223,7 @@ class UpdateService:
             meta = json.loads(response.read())
         key = "nightly_release" if check_channel == "preview" else "stable_release"
         if key not in meta:
-            raise ValueError(f"Fallback metadata missing {key}")
+            raise ValueError(f"回退元数据缺少 {key}")
         return meta[key]
 
     def check_for_updates(
@@ -260,7 +260,7 @@ class UpdateService:
             msi_asset = self._select_asset_for_architecture(assets, channel=check_channel)
 
             if not msi_asset:
-                raise ValueError(f"No MSI installer found for {ARCHITECTURE} architecture")
+                raise ValueError(f"未找到适用于 {ARCHITECTURE} 架构的 MSI 安装程序")
 
             # Get version display based on channel
             if check_channel == "preview":
@@ -276,7 +276,7 @@ class UpdateService:
             else:
                 version = release_data.get("tag_name", "").lstrip("vV")
                 if not version:
-                    raise ValueError("Release tag is missing")
+                    raise ValueError("发布标签缺失")
 
                 # Check if it's actually an update for stable channel
                 if not skip_version_check and not self.is_newer_version(version):
@@ -301,7 +301,7 @@ class UpdateService:
             raise
         except json.JSONDecodeError as e:
             logging.error("Failed to parse GitHub API response: %s", e)
-            raise ValueError("Invalid JSON response from GitHub API")
+            raise ValueError("GitHub API 返回的 JSON 无效")
         except Exception as e:
             logging.error("Unexpected error checking for updates: %s", e)
             raise
@@ -411,14 +411,14 @@ def start_update_checker() -> None:
                 # Determine launch URL and message based on channel
                 if update_service._current_channel == "preview":
                     launch_url = "https://github.com/amnweb/yasb/releases/tag/preview"
-                    message = "New preview build is available!"
+                    message = "新的预览版已可用！"
                 else:
                     launch_url = "https://github.com/amnweb/yasb/releases/latest"
-                    message = f"New version {release_info.version} is available!"
+                    message = f"新版本 {release_info.version} 已可用！"
 
                 toaster.show(
                     icon_path=icon_path,
-                    title="Update Available",
+                    title="发现更新",
                     message=message,
                     launch_url=launch_url,
                     scenario="reminder",

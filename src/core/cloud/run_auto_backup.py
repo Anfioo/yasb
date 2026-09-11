@@ -48,10 +48,10 @@ def _notify() -> None:
 
         ToastNotifier().show(
             os.path.join(SCRIPT_PATH, "assets", "images", "app_transparent.png"),
-            "Automatic backup turned off",
-            "Your subscription is not active, so YASB Cloud has stopped backing up automatically.",
+            "自动备份已关闭",
+            "你的订阅无效，因此 YASB Cloud 已停止自动备份。",
             launch_url=f"{BASE_URL}/account",
-            launch_label="Manage subscription",
+            launch_label="管理订阅",
         )
     except Exception as exc:
         logger.warning("could not show the notification: %s", exc)
