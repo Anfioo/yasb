@@ -202,8 +202,8 @@ class BarAnimationManager(QObject):
                 cursor_pos, bar_geometry
             ):
                 if isinstance(autohide_mgr, SmartAutoHideManager):
-                    if autohide_mgr._lock_timer:
-                        autohide_mgr._lock_timer.start(autohide_mgr._config.get("lock_timeout", 15000))
+                    if autohide_mgr._hide_timer:
+                        autohide_mgr._hide_timer.start(autohide_mgr._autohide_delay)
                 elif hasattr(autohide_mgr, "_hide_timer") and autohide_mgr._hide_timer:
                     autohide_mgr._hide_timer.start(autohide_mgr._autohide_delay)
 
@@ -493,9 +493,11 @@ class LockIndicatorWidget(QWidget):
 class SmartAutoHideManager(QObject):
     """智能自动隐藏管理器。
 
-    锁定状态：栏隐藏，仅显示透明的锁图标指示器（覆盖栏宽）。
-    鼠标悬停在指示器上：锁图标外圈出现进度环，进度满后解锁显示完整栏。
-    鼠标离开栏：开始锁定倒计时，超时后重新锁定。
+    三态行为：
+    - 锁定：栏隐藏，仅显示锁图标指示器；鼠标悬停栏区域，进度环满后解锁。
+    - 解锁可见：完整栏显示，行为与普通自动隐藏一致；鼠标离开 600ms 后隐藏栏。
+    - 解锁隐藏：栏隐藏，顶部 1px 检测区生效；鼠标移到顶部即显示栏；
+      经过 lock_timeout 无交互后重新锁定。
     """
 
     def __init__(self, bar_widget, config: dict, parent=None):
@@ -505,26 +507,39 @@ class SmartAutoHideManager(QObject):
         self._is_enabled = False
         self._is_locked = True
         self._indicator = None
+        self._detection_zone = None
         self._unlock_timer = None
         self._unlock_elapsed = 0
         self._unlock_interval = 30  # 进度更新间隔 ms
-        self._lock_timer = None
+        self._hide_timer = None     # 解锁后鼠标离开的短延迟隐藏（与普通自动隐藏一致 600ms）
+        self._autohide_delay = 600
+        self._lock_timer = None     # 解锁隐藏后重新锁定的倒计时
 
     def setup(self):
         """初始化智能自动隐藏。"""
         self._is_enabled = True
         self._is_locked = True
 
-        # 创建锁图标指示器
+        # 创建锁图标指示器（锁定态）
         self._indicator = LockIndicatorWidget(self._config, self.bar_widget)
         self._indicator.installEventFilter(self)
+
+        # 创建顶部检测区（解锁隐藏态，与普通自动隐藏一致）
+        self._detection_zone = AutoHideZone(self.bar_widget)
+        self._detection_zone.setMouseTracking(True)
+        self._detection_zone.enter_event.connect(self._on_detection_zone_enter)
 
         # 解锁进度计时器
         self._unlock_timer = QTimer(self.bar_widget)
         self._unlock_timer.setInterval(self._unlock_interval)
         self._unlock_timer.timeout.connect(self._on_unlock_tick)
 
-        # 锁定倒计时计时器
+        # 短延迟隐藏计时器（解锁可见 → 解锁隐藏）
+        self._hide_timer = QTimer(self.bar_widget)
+        self._hide_timer.setSingleShot(True)
+        self._hide_timer.timeout.connect(self._on_hide_timer)
+
+        # 锁定倒计时计时器（解锁隐藏 → 锁定）
         self._lock_timer = QTimer(self.bar_widget)
         self._lock_timer.setSingleShot(True)
         self._lock_timer.timeout.connect(self._lock)
@@ -558,11 +573,39 @@ class SmartAutoHideManager(QObject):
 
         return QRect(bar_geo.x(), y, bar_geo.width(), height)
 
+    def _setup_detection_zone(self):
+        """设置顶部 1px 检测区的位置和大小（与普通自动隐藏一致）。"""
+        if not self._detection_zone:
+            return
+        screen_geo = self.bar_widget.screen().geometry()
+        bar_geo = self.bar_widget.geometry()
+        alignment = self.bar_widget._alignment
+        zone_height = 1
+
+        if alignment["position"] == "top":
+            y = screen_geo.y()
+        else:
+            y = screen_geo.y() + screen_geo.height() - zone_height
+
+        self._detection_zone.setGeometry(bar_geo.x(), y, bar_geo.width(), zone_height)
+
     def _enter_locked_state(self):
-        """进入锁定状态：隐藏栏，显示指示器。"""
+        """进入锁定状态：隐藏栏和检测区，显示锁图标指示器。"""
         if not self._is_enabled:
             return
         self._is_locked = True
+
+        # 停止所有计时器
+        if self._hide_timer:
+            self._hide_timer.stop()
+        if self._lock_timer:
+            self._lock_timer.stop()
+
+        # 隐藏检测区
+        if self._detection_zone:
+            self._detection_zone.hide()
+
+        # 隐藏栏并显示指示器
         self.bar_widget.hide()
         if self._indicator:
             geo = self._indicator_geometry()
@@ -572,21 +615,77 @@ class SmartAutoHideManager(QObject):
             self._indicator.raise_()
 
     def _unlock(self):
-        """解锁：隐藏指示器，显示完整栏。"""
+        """解锁：隐藏指示器，显示完整栏，进入解锁可见态。"""
         if not self._is_enabled:
             return
         self._is_locked = False
+
+        # 隐藏指示器
         if self._indicator:
             self._indicator.hide()
-        self.bar_widget.show()
-        self.bar_widget.raise_()
-        # 重置解锁进度
+
+        # 停止解锁进度
         self._unlock_elapsed = 0
         if self._unlock_timer:
             self._unlock_timer.stop()
 
+        # 停止锁定倒计时
+        if self._lock_timer:
+            self._lock_timer.stop()
+
+        # 显示栏（与普通自动隐藏一致的动画）
+        anim_mgr = getattr(self.bar_widget, "_animation_manager", None)
+        if anim_mgr and self.bar_widget._animation.get("enabled", False):
+            anim_mgr.show_bar()
+        else:
+            self.bar_widget.show()
+        self.bar_widget.raise_()
+
+    def _on_hide_timer(self):
+        """短延迟隐藏计时器回调：栏隐藏，显示检测区，开始锁定倒计时。"""
+        if not self._is_enabled or self._is_locked:
+            return
+
+        # 隐藏栏（与普通自动隐藏一致的动画）
+        anim_mgr = getattr(self.bar_widget, "_animation_manager", None)
+        if anim_mgr and self.bar_widget._animation.get("enabled", False):
+            anim_mgr.hide_bar()
+        else:
+            self.bar_widget.hide()
+
+        # 显示顶部检测区
+        self._setup_detection_zone()
+        if self._detection_zone:
+            self._detection_zone.show()
+            self._detection_zone.raise_()
+
+        # 开始锁定倒计时
+        if self._lock_timer:
+            self._lock_timer.start(self._config.get("lock_timeout", 15000))
+
+    def _on_detection_zone_enter(self):
+        """鼠标进入顶部检测区：显示栏，停止锁定倒计时。"""
+        if not self._is_enabled or self._is_locked:
+            return
+
+        # 停止锁定倒计时
+        if self._lock_timer:
+            self._lock_timer.stop()
+
+        # 隐藏检测区
+        if self._detection_zone:
+            self._detection_zone.hide()
+
+        # 显示栏（与普通自动隐藏一致的动画）
+        anim_mgr = getattr(self.bar_widget, "_animation_manager", None)
+        if anim_mgr and self.bar_widget._animation.get("enabled", False):
+            anim_mgr.show_bar()
+        else:
+            self.bar_widget.show()
+        self.bar_widget.raise_()
+
     def _lock(self):
-        """锁定：隐藏栏，显示指示器。"""
+        """锁定倒计时回调：重新进入锁定状态。"""
         if not self._is_enabled:
             return
         # 如果有弹出菜单打开，延迟锁定
@@ -648,22 +747,27 @@ class SmartAutoHideManager(QObject):
                     if self._indicator:
                         self._indicator.reset_progress()
 
-        # 栏的鼠标离开：开始锁定倒计时
+        # 栏的鼠标事件（解锁可见态）
         if watched is self.bar_widget and not self._is_locked:
             if event.type() == QEvent.Type.Leave:
                 cursor_pos = QCursor.pos()
                 bar_geo = self.bar_widget.geometry()
                 # 检查鼠标是否仍在栏附近的安全区域
                 if not self._is_mouse_in_safe_zone(cursor_pos, bar_geo):
-                    self._lock_timer.start(self._config.get("lock_timeout", 15000))
+                    # 停止锁定倒计时（如果正在运行），启动短延迟隐藏
+                    if self._lock_timer:
+                        self._lock_timer.stop()
+                    if self._hide_timer:
+                        self._hide_timer.start(self._autohide_delay)
             elif event.type() == QEvent.Type.Enter:
-                if self._lock_timer:
-                    self._lock_timer.stop()
+                # 鼠标回到栏上，取消短延迟隐藏
+                if self._hide_timer:
+                    self._hide_timer.stop()
 
         return False
 
     def _is_mouse_in_safe_zone(self, cursor_pos, bar_geometry):
-        """检查鼠标是否在栏附近的安全区域（防止动画期间误触发锁定）。"""
+        """检查鼠标是否在栏附近的安全区域（防止动画期间误触发隐藏）。"""
         screen_geometry = self.bar_widget.screen().geometry()
         alignment = self.bar_widget._alignment
         screen_x = cursor_pos.x() - screen_geometry.x()
@@ -680,9 +784,11 @@ class SmartAutoHideManager(QObject):
             return bar_bottom - 5 <= screen_y <= screen_geometry.height()
 
     def update_indicator_position(self):
-        """屏幕几何变化时更新指示器位置。"""
+        """屏幕几何变化时更新指示器和检测区位置。"""
         if self._indicator and self._is_locked:
             self._indicator.setGeometry(self._indicator_geometry())
+        if self._detection_zone and not self._is_locked and not self.bar_widget.isVisible():
+            self._setup_detection_zone()
 
     def is_enabled(self):
         return self._is_enabled
@@ -695,12 +801,18 @@ class SmartAutoHideManager(QObject):
         self._is_enabled = False
         if self._unlock_timer:
             self._unlock_timer.stop()
+        if self._hide_timer:
+            self._hide_timer.stop()
         if self._lock_timer:
             self._lock_timer.stop()
         if self._indicator:
             self._indicator.hide()
             self._indicator.deleteLater()
             self._indicator = None
+        if self._detection_zone:
+            self._detection_zone.hide()
+            self._detection_zone.deleteLater()
+            self._detection_zone = None
 
         # 恢复 AppBar 预留空间
         if hasattr(self.bar_widget, "update_app_bar") and self.bar_widget._window_flags["windows_app_bar"]:
@@ -1166,9 +1278,16 @@ class BarContextMenu:
                 # 普通自动隐藏模式：重启隐藏计时器
                 if isinstance(manager, AutoHideManager) and manager._hide_timer:
                     manager._hide_timer.start(manager._autohide_delay)
-                # 智能模式：重启锁定倒计时
+                # 智能模式：根据当前状态重启对应计时器
                 elif isinstance(manager, SmartAutoHideManager) and not manager.is_locked():
-                    manager._lock_timer.start(manager._config.get("lock_timeout", 15000))
+                    if self.parent.isVisible():
+                        # 栏可见：启动短延迟隐藏
+                        if manager._hide_timer:
+                            manager._hide_timer.start(manager._autohide_delay)
+                    else:
+                        # 栏已隐藏：重启锁定倒计时
+                        if manager._lock_timer:
+                            manager._lock_timer.start(manager._config.get("lock_timeout", 15000))
 
         except Exception as e:
             logging.error("Failed to restart autohide timer: %s", e)
