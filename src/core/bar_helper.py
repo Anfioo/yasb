@@ -527,7 +527,6 @@ class SmartAutoHideManager(QObject):
         # 创建顶部检测区（解锁隐藏态，与普通自动隐藏一致）
         self._detection_zone = AutoHideZone(self.bar_widget)
         self._detection_zone.setMouseTracking(True)
-        self._detection_zone.enter_event.connect(self._on_detection_zone_enter)
 
         # 解锁进度计时器
         self._unlock_timer = QTimer(self.bar_widget)
@@ -663,9 +662,9 @@ class SmartAutoHideManager(QObject):
         if self._lock_timer:
             self._lock_timer.start(self._config.get("lock_timeout", 15000))
 
-    def _on_detection_zone_enter(self):
-        """鼠标进入顶部检测区：显示栏，停止锁定倒计时。"""
-        if not self._is_enabled or self._is_locked:
+    def show_bar(self):
+        """检测区鼠标进入：显示栏，停止锁定倒计时（与 AutoHideManager.show_bar 接口一致）。"""
+        if not self._is_enabled or self._is_locked or self.bar_widget.isVisible():
             return
 
         # 停止锁定倒计时
