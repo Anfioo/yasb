@@ -543,8 +543,10 @@ class SmartAutoHideManager(QObject):
         self._lock_timer.setSingleShot(True)
         self._lock_timer.timeout.connect(self._lock)
 
-        # 安装栏的事件过滤器
+        # 安装栏和栏框架的事件过滤器（框架覆盖栏的全部区域，用于捕获双击空白处）
         self.bar_widget.installEventFilter(self)
+        if hasattr(self.bar_widget, "_bar_frame") and self.bar_widget._bar_frame:
+            self.bar_widget._bar_frame.installEventFilter(self)
 
         # 移除 AppBar 预留空间
         if hasattr(self.bar_widget, "app_bar_manager") and self.bar_widget.app_bar_manager:
@@ -758,9 +760,21 @@ class SmartAutoHideManager(QObject):
                     if self._indicator:
                         self._indicator.reset_progress()
 
-        # 栏的鼠标事件（解锁可见态）
-        if watched is self.bar_widget and not self._is_locked:
-            if event.type() == QEvent.Type.Leave:
+        # 栏和栏框架的鼠标事件（解锁可见态）
+        bar_frame = getattr(self.bar_widget, "_bar_frame", None)
+        is_bar_target = watched is self.bar_widget or (bar_frame is not None and watched is bar_frame)
+
+        if is_bar_target and not self._is_locked:
+            # 双击空白处立即隐藏
+            if event.type() == QEvent.Type.MouseButtonDblClick:
+                if self._config.get("double_click_to_hide", True):
+                    if self._hide_timer:
+                        self._hide_timer.stop()
+                    logging.debug("智能自动隐藏：双击空白处，立即隐藏")
+                    self._on_hide_timer()
+                    return True
+            # 鼠标离开栏：启动短延迟隐藏
+            elif event.type() == QEvent.Type.Leave and watched is self.bar_widget:
                 cursor_pos = QCursor.pos()
                 bar_geo = self.bar_widget.geometry()
                 # 检查鼠标是否仍在栏附近的安全区域
@@ -770,7 +784,7 @@ class SmartAutoHideManager(QObject):
                         self._lock_timer.stop()
                     if self._hide_timer:
                         self._hide_timer.start(self._autohide_delay)
-            elif event.type() == QEvent.Type.Enter:
+            elif event.type() == QEvent.Type.Enter and watched is self.bar_widget:
                 # 鼠标回到栏上，取消短延迟隐藏
                 if self._hide_timer:
                     self._hide_timer.stop()

@@ -35,6 +35,7 @@ class SmartAutoHideConfig(CustomBaseModel):
     progress_background_color: str = Field(default="#555555", description="进度环背景颜色")
     progress_thickness: int = Field(default=3, ge=1, le=8, description="进度环粗细（像素）")
     indicator_opacity: float = Field(default=0.6, ge=0.1, le=1.0, description="锁定时指示器不透明度")
+    double_click_to_hide: bool = Field(default=True, description="双击栏空白处立即隐藏")
 
 
 class BarWindowFlags(CustomBaseModel):
