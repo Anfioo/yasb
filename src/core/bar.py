@@ -13,6 +13,7 @@ from core.bar_helper import (
     BarContextMenu,
     MaximizedWindowWatcher,
     OsThemeManager,
+    SmartAutoHideManager,
 )
 from core.bar_style import AdaptiveBarFrame, BarFrame
 from core.events.service import EventService
@@ -136,9 +137,14 @@ class Bar(QWidget):
 
         self.update_app_bar()
 
-        if self._window_flags["auto_hide"]:
+        auto_hide_mode = self._window_flags["auto_hide"]
+        if auto_hide_mode == "on":
             self._autohide_manager = AutoHideManager(self, self)
             self._autohide_manager.setup_autohide()
+        elif auto_hide_mode == "smart":
+            smart_config = self.config.window_flags.smart_auto_hide.model_dump()
+            self._autohide_manager = SmartAutoHideManager(self, smart_config, self)
+            self._autohide_manager.setup()
 
         if self._window_flags["hide_on_maximized"] and not self._window_flags["windows_app_bar"]:
             self._maximized_watcher = MaximizedWindowWatcher(self, self)
@@ -169,7 +175,10 @@ class Bar(QWidget):
         self.update_app_bar()
 
         if self._autohide_manager and self._autohide_manager.is_enabled():
-            self._autohide_manager.setup_detection_zone()
+            if isinstance(self._autohide_manager, SmartAutoHideManager):
+                self._autohide_manager.update_indicator_position()
+            else:
+                self._autohide_manager.setup_detection_zone()
 
         if self._is_auto_width and self._auto_width_manager:
             QTimer.singleShot(0, self._auto_width_manager.sync)

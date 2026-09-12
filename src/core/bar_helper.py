@@ -16,16 +16,18 @@ from PyQt6.QtCore import (
     QObject,
     QPropertyAnimation,
     QRect,
+    QRectF,
     Qt,
     QTimer,
 )
-from PyQt6.QtGui import QCursor
+from PyQt6.QtGui import QColor, QCursor, QFont, QPainter, QPen
 from PyQt6.QtWidgets import (
     QApplication,
     QCheckBox,
     QFrame,
     QGraphicsOpacityEffect,
     QHBoxLayout,
+    QLabel,
     QMenu,
     QSizePolicy,
     QWidget,
@@ -409,6 +411,300 @@ class AutoHideManager(QObject):
                 SystrayAppBarHelper.execute_without_systray_interference(lambda: self.bar_widget.update_app_bar())
             except Exception as e:
                 logging.error("Failed to restore AppBar reservation: %s", e)
+
+
+class LockIndicatorWidget(QWidget):
+    """智能自动隐藏模式下的锁图标指示器，带环形解锁进度条。
+
+    窗口本身覆盖整个栏的宽度（透明），仅在中心绘制锁图标和进度环，
+    这样鼠标在栏的任意位置悬停都能触发解锁。
+    """
+
+    def __init__(self, config: dict, parent=None):
+        super().__init__(parent)
+        self._config = config
+        self._progress = 0.0  # 0.0 ~ 1.0
+        self._unlocking = False
+
+        self.setWindowFlags(
+            Qt.WindowType.Tool
+            | Qt.WindowType.FramelessWindowHint
+            | Qt.WindowType.WindowStaysOnTopHint
+            | Qt.WindowType.WindowDoesNotAcceptFocus
+            | Qt.WindowType.NoDropShadowWindowHint
+        )
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setWindowOpacity(config.get("indicator_opacity", 0.6))
+
+    def set_progress(self, value: float):
+        """设置解锁进度 (0.0~1.0)，触发重绘。"""
+        self._progress = max(0.0, min(1.0, value))
+        self._unlocking = self._progress > 0
+        self.update()
+
+    def reset_progress(self):
+        """重置进度为 0。"""
+        self._progress = 0.0
+        self._unlocking = False
+        self.update()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        size = self._config.get("indicator_size", 28)
+        cx = self.width() // 2
+        cy = self.height() // 2
+        half = size // 2
+        rect = QRectF(cx - half, cy - half, size, size)
+
+        # 绘制进度环背景
+        thickness = self._config.get("progress_thickness", 3)
+        bg_color = QColor(self._config.get("progress_background_color", "#555555"))
+        pen_bg = QPen(bg_color, thickness)
+        pen_bg.setCapStyle(Qt.PenCapStyle.RoundCap)
+        painter.setPen(pen_bg)
+        painter.drawArc(rect, 0, 360 * 16)
+
+        # 绘制解锁进度环
+        if self._progress > 0:
+            fg_color = QColor(self._config.get("progress_color", "#ffffff"))
+            pen_fg = QPen(fg_color, thickness)
+            pen_fg.setCapStyle(Qt.PenCapStyle.RoundCap)
+            painter.setPen(pen_fg)
+            span_angle = int(-360 * 16 * self._progress)
+            painter.drawArc(rect, 90 * 16, span_angle)
+
+        # 绘制锁图标
+        painter.setPen(QColor(self._config.get("progress_color", "#ffffff")))
+        font = QFont()
+        font.setPointSize(max(8, size // 3))
+        font.setFamily("Segoe MDL2 Assets")
+        painter.setFont(font)
+        icon = self._config.get("lock_icon", "\uf023")
+        painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, icon)
+
+        painter.end()
+
+
+class SmartAutoHideManager(QObject):
+    """智能自动隐藏管理器。
+
+    锁定状态：栏隐藏，仅显示透明的锁图标指示器（覆盖栏宽）。
+    鼠标悬停在指示器上：锁图标外圈出现进度环，进度满后解锁显示完整栏。
+    鼠标离开栏：开始锁定倒计时，超时后重新锁定。
+    """
+
+    def __init__(self, bar_widget, config: dict, parent=None):
+        super().__init__(parent)
+        self.bar_widget = bar_widget
+        self._config = config
+        self._is_enabled = False
+        self._is_locked = True
+        self._indicator = None
+        self._unlock_timer = None
+        self._unlock_elapsed = 0
+        self._unlock_interval = 30  # 进度更新间隔 ms
+        self._lock_timer = None
+
+    def setup(self):
+        """初始化智能自动隐藏。"""
+        self._is_enabled = True
+        self._is_locked = True
+
+        # 创建锁图标指示器
+        self._indicator = LockIndicatorWidget(self._config, self.bar_widget)
+        self._indicator.installEventFilter(self)
+
+        # 解锁进度计时器
+        self._unlock_timer = QTimer(self.bar_widget)
+        self._unlock_timer.setInterval(self._unlock_interval)
+        self._unlock_timer.timeout.connect(self._on_unlock_tick)
+
+        # 锁定倒计时计时器
+        self._lock_timer = QTimer(self.bar_widget)
+        self._lock_timer.setSingleShot(True)
+        self._lock_timer.timeout.connect(self._lock)
+
+        # 安装栏的事件过滤器
+        self.bar_widget.installEventFilter(self)
+
+        # 移除 AppBar 预留空间
+        if hasattr(self.bar_widget, "app_bar_manager") and self.bar_widget.app_bar_manager:
+            try:
+                SystrayAppBarHelper.execute_without_systray_interference(
+                    lambda: self.bar_widget.app_bar_manager.remove_appbar()
+                )
+            except Exception as e:
+                logging.error("智能自动隐藏：移除 AppBar 预留失败：%s", e)
+
+        # 延迟定位指示器并进入锁定状态
+        QTimer.singleShot(100, self._enter_locked_state)
+
+    def _indicator_geometry(self) -> QRect:
+        """计算指示器应处的几何位置（与栏同宽同高，位于栏的位置）。"""
+        screen_geo = self.bar_widget.screen().geometry()
+        bar_geo = self.bar_widget.geometry()
+        alignment = self.bar_widget._alignment
+        height = self.bar_widget._dimensions["height"]
+
+        if alignment["position"] == "top":
+            y = screen_geo.y()
+        else:
+            y = screen_geo.y() + screen_geo.height() - height
+
+        return QRect(bar_geo.x(), y, bar_geo.width(), height)
+
+    def _enter_locked_state(self):
+        """进入锁定状态：隐藏栏，显示指示器。"""
+        if not self._is_enabled:
+            return
+        self._is_locked = True
+        self.bar_widget.hide()
+        if self._indicator:
+            geo = self._indicator_geometry()
+            self._indicator.setGeometry(geo)
+            self._indicator.reset_progress()
+            self._indicator.show()
+            self._indicator.raise_()
+
+    def _unlock(self):
+        """解锁：隐藏指示器，显示完整栏。"""
+        if not self._is_enabled:
+            return
+        self._is_locked = False
+        if self._indicator:
+            self._indicator.hide()
+        self.bar_widget.show()
+        self.bar_widget.raise_()
+        # 重置解锁进度
+        self._unlock_elapsed = 0
+        if self._unlock_timer:
+            self._unlock_timer.stop()
+
+    def _lock(self):
+        """锁定：隐藏栏，显示指示器。"""
+        if not self._is_enabled:
+            return
+        # 如果有弹出菜单打开，延迟锁定
+        if self._should_stay_visible():
+            self._lock_timer.start(self._config.get("lock_timeout", 15000))
+            return
+        self._enter_locked_state()
+
+    def _should_stay_visible(self) -> bool:
+        """检查栏是否应保持可见（弹出菜单/子窗口打开时）。"""
+        if QApplication.activePopupWidget():
+            return True
+        active = QApplication.activeWindow()
+        if active and active is not self.bar_widget:
+            p = active.parent() if active else None
+            while p:
+                if p is self.bar_widget:
+                    return True
+                p = p.parent()
+        cursor_pos = QCursor.pos()
+        for w in QApplication.topLevelWidgets():
+            if w is self.bar_widget or w is self._indicator or not w.isVisible():
+                continue
+            p = w.parent() if w else None
+            while p:
+                if p is self.bar_widget:
+                    return True
+                p = p.parent()
+            if w.geometry().contains(cursor_pos):
+                return True
+        return False
+
+    def _on_unlock_tick(self):
+        """解锁进度计时器回调。"""
+        self._unlock_elapsed += self._unlock_interval
+        duration = self._config.get("unlock_hover_duration", 500)
+        progress = self._unlock_elapsed / duration
+        if self._indicator:
+            self._indicator.set_progress(progress)
+        if progress >= 1.0:
+            self._unlock_timer.stop()
+            self._unlock()
+
+    def eventFilter(self, watched, event):
+        """事件过滤器：处理指示器和栏的鼠标进入/离开。"""
+        if not self._is_enabled:
+            return False
+
+        # 指示器的鼠标进入：开始解锁进度
+        if watched is self._indicator:
+            if event.type() == QEvent.Type.Enter:
+                if self._is_locked:
+                    self._unlock_elapsed = 0
+                    self._unlock_timer.start()
+            elif event.type() == QEvent.Type.Leave:
+                if self._is_locked:
+                    self._unlock_timer.stop()
+                    self._unlock_elapsed = 0
+                    if self._indicator:
+                        self._indicator.reset_progress()
+
+        # 栏的鼠标离开：开始锁定倒计时
+        if watched is self.bar_widget and not self._is_locked:
+            if event.type() == QEvent.Type.Leave:
+                cursor_pos = QCursor.pos()
+                bar_geo = self.bar_widget.geometry()
+                # 检查鼠标是否仍在栏附近的安全区域
+                if not self._is_mouse_in_safe_zone(cursor_pos, bar_geo):
+                    self._lock_timer.start(self._config.get("lock_timeout", 15000))
+            elif event.type() == QEvent.Type.Enter:
+                if self._lock_timer:
+                    self._lock_timer.stop()
+
+        return False
+
+    def _is_mouse_in_safe_zone(self, cursor_pos, bar_geometry):
+        """检查鼠标是否在栏附近的安全区域（防止动画期间误触发锁定）。"""
+        screen_geometry = self.bar_widget.screen().geometry()
+        alignment = self.bar_widget._alignment
+        screen_x = cursor_pos.x() - screen_geometry.x()
+        screen_y = cursor_pos.y() - screen_geometry.y()
+
+        if screen_x < 0 or screen_x > screen_geometry.width():
+            return False
+
+        if alignment["position"] == "top":
+            bar_top = bar_geometry.y() - screen_geometry.y()
+            return 0 <= screen_y <= bar_top + bar_geometry.height() + 5
+        else:
+            bar_bottom = (bar_geometry.y() + bar_geometry.height()) - screen_geometry.y()
+            return bar_bottom - 5 <= screen_y <= screen_geometry.height()
+
+    def update_indicator_position(self):
+        """屏幕几何变化时更新指示器位置。"""
+        if self._indicator and self._is_locked:
+            self._indicator.setGeometry(self._indicator_geometry())
+
+    def is_enabled(self):
+        return self._is_enabled
+
+    def is_locked(self):
+        return self._is_locked
+
+    def cleanup(self):
+        """清理资源。"""
+        self._is_enabled = False
+        if self._unlock_timer:
+            self._unlock_timer.stop()
+        if self._lock_timer:
+            self._lock_timer.stop()
+        if self._indicator:
+            self._indicator.hide()
+            self._indicator.deleteLater()
+            self._indicator = None
+
+        # 恢复 AppBar 预留空间
+        if hasattr(self.bar_widget, "update_app_bar") and self.bar_widget._window_flags["windows_app_bar"]:
+            try:
+                SystrayAppBarHelper.execute_without_systray_interference(lambda: self.bar_widget.update_app_bar())
+            except Exception as e:
+                logging.error("智能自动隐藏：恢复 AppBar 预留失败：%s", e)
 
 
 class SystrayAppBarHelper:
@@ -822,19 +1118,29 @@ class BarContextMenu:
 
         self._menu.addSeparator()
 
-        # Bar actions - Check current autohide state dynamically
-        current_autohide_enabled = (
-            hasattr(self.parent, "_autohide_manager")
-            and self.parent._autohide_manager
-            and self.parent._autohide_manager.is_enabled()
+        # Bar actions - 自动隐藏三态子菜单
+        autohide_menu = self._menu.addMenu("自动隐藏")
+        apply_qmenu_style(autohide_menu)
+        autohide_menu.setProperty(
+            "class", "context-menu submenu dark" if GlobalState.is_dark() else "context-menu submenu"
         )
 
-        if not current_autohide_enabled:
-            enable_autohide = self._menu.addAction("启用自动隐藏")
-            enable_autohide.triggered.connect(self._enable_autohide)
-        else:
-            disable_autohide = self._menu.addAction("禁用自动隐藏")
-            disable_autohide.triggered.connect(self._disable_autohide)
+        current_mode = self._get_current_autohide_mode()
+
+        action_off = autohide_menu.addAction("关闭")
+        action_off.setCheckable(True)
+        action_off.setChecked(current_mode == "off")
+        action_off.triggered.connect(self._disable_autohide)
+
+        action_on = autohide_menu.addAction("开启")
+        action_on.setCheckable(True)
+        action_on.setChecked(current_mode == "on")
+        action_on.triggered.connect(self._enable_autohide)
+
+        action_smart = autohide_menu.addAction("智能")
+        action_smart.setCheckable(True)
+        action_smart.setChecked(current_mode == "smart")
+        action_smart.triggered.connect(self._enable_smart_autohide)
 
         reload_action = self._menu.addAction("重载栏")
         reload_action.triggered.connect(partial(reload_application, "正在从右键菜单重载栏..."))
@@ -848,18 +1154,33 @@ class BarContextMenu:
     def _on_menu_about_to_hide(self):
         """Called when the context menu is about to hide - restart autohide timer if enabled"""
         try:
-            # Check if autohide is enabled and start the hide timer
             if (
                 hasattr(self.parent, "_autohide_manager")
                 and self.parent._autohide_manager
                 and self.parent._autohide_manager.is_enabled()
             ):
-                # Start the autohide timer with the configured delay
-                if self.parent._autohide_manager._hide_timer:
-                    self.parent._autohide_manager._hide_timer.start(self.parent._autohide_manager._autohide_delay)
+                manager = self.parent._autohide_manager
+                # 普通自动隐藏模式：重启隐藏计时器
+                if isinstance(manager, AutoHideManager) and manager._hide_timer:
+                    manager._hide_timer.start(manager._autohide_delay)
+                # 智能模式：重启锁定倒计时
+                elif isinstance(manager, SmartAutoHideManager) and not manager.is_locked():
+                    manager._lock_timer.start(manager._config.get("lock_timeout", 15000))
 
         except Exception as e:
             logging.error("Failed to restart autohide timer: %s", e)
+
+    def _get_current_autohide_mode(self) -> str:
+        """获取当前自动隐藏模式：off / on / smart"""
+        if (
+            hasattr(self.parent, "_autohide_manager")
+            and self.parent._autohide_manager
+            and self.parent._autohide_manager.is_enabled()
+        ):
+            if isinstance(self.parent._autohide_manager, SmartAutoHideManager):
+                return "smart"
+            return "on"
+        return "off"
 
     def _populate_widgets_menu(self, widgets_menu):
         if not any(self._widgets.get(layout) for layout in ["left", "center", "right"]):
@@ -1033,21 +1354,54 @@ class BarContextMenu:
             logging.error("Failed to create flash effect: %s", e)
 
     def _enable_autohide(self):
-        """Enable autohide functionality for the bar"""
+        """启用普通自动隐藏功能"""
         try:
+            # 如果当前是智能模式，先清理
+            if (
+                hasattr(self.parent, "_autohide_manager")
+                and self.parent._autohide_manager
+                and isinstance(self.parent._autohide_manager, SmartAutoHideManager)
+            ):
+                self.parent._autohide_manager.cleanup()
+                self.parent._autohide_manager = None
+
             if not hasattr(self.parent, "_autohide_manager") or not self.parent._autohide_manager:
-                # Create autohide manager if it doesn't exist
                 self.parent._autohide_manager = AutoHideManager(self.parent, self.parent)
 
-            # Setup autohide if not already enabled
             if not self.parent._autohide_manager.is_enabled():
                 self.parent._autohide_manager.setup_autohide()
 
         except Exception as e:
             logging.error("Failed to enable autohide: %s", e)
 
+    def _enable_smart_autohide(self):
+        """启用智能自动隐藏功能"""
+        try:
+            # 如果当前是普通模式，先清理
+            if (
+                hasattr(self.parent, "_autohide_manager")
+                and self.parent._autohide_manager
+                and isinstance(self.parent._autohide_manager, AutoHideManager)
+            ):
+                self.parent._autohide_manager.cleanup()
+                self.parent._autohide_manager = None
+
+            if not hasattr(self.parent, "_autohide_manager") or not self.parent._autohide_manager:
+                smart_config = (
+                    self.parent.config.window_flags.smart_auto_hide.model_dump()
+                    if hasattr(self.parent, "config")
+                    else {}
+                )
+                self.parent._autohide_manager = SmartAutoHideManager(self.parent, smart_config, self.parent)
+
+            if not self.parent._autohide_manager.is_enabled():
+                self.parent._autohide_manager.setup()
+
+        except Exception as e:
+            logging.error("Failed to enable smart autohide: %s", e)
+
     def _disable_autohide(self):
-        """Disable autohide functionality"""
+        """禁用自动隐藏功能（普通和智能模式）"""
         try:
             if hasattr(self.parent, "_autohide_manager") and self.parent._autohide_manager:
                 self.parent._autohide_manager.cleanup()

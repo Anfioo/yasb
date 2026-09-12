@@ -24,12 +24,34 @@ class BarAnimation(CustomBaseModel):
     type: Literal["slide", "fade"] = "slide"
 
 
+class SmartAutoHideConfig(CustomBaseModel):
+    """智能自动隐藏配置：锁定时仅显示锁图标，悬停进度满后解锁显示完整栏。"""
+
+    unlock_hover_duration: int = Field(default=500, ge=100, le=5000, description="悬停解锁所需毫秒数")
+    lock_timeout: int = Field(default=15000, ge=1000, le=300000, description="鼠标离开后多少毫秒重新锁定")
+    lock_icon: str = Field(default="\uf023", description="锁定状态显示的图标字符")
+    indicator_size: int = Field(default=28, ge=16, le=64, description="锁图标指示器尺寸（像素）")
+    progress_color: str = Field(default="#ffffff", description="解锁进度环颜色")
+    progress_background_color: str = Field(default="#555555", description="进度环背景颜色")
+    progress_thickness: int = Field(default=3, ge=1, le=8, description="进度环粗细（像素）")
+    indicator_opacity: float = Field(default=0.6, ge=0.1, le=1.0, description="锁定时指示器不透明度")
+
+
 class BarWindowFlags(CustomBaseModel):
     always_on_top: bool = False
     windows_app_bar: bool = False
     hide_on_fullscreen: bool = False
     hide_on_maximized: bool = False
-    auto_hide: bool = False
+    auto_hide: Literal["off", "on", "smart"] = "off"
+    smart_auto_hide: SmartAutoHideConfig = SmartAutoHideConfig()
+
+    @field_validator("auto_hide", mode="before")
+    @classmethod
+    def _coerce_auto_hide(cls, v):
+        """兼容旧配置：true/false 布尔值自动转换为 on/off。"""
+        if isinstance(v, bool):
+            return "on" if v else "off"
+        return v
 
 
 class BarDimensions(CustomBaseModel):
