@@ -131,7 +131,7 @@ class PowerOperations:
                 while widget and not hasattr(widget, "_autohide_bar"):
                     widget = widget.parent()
 
-                if widget and widget._autohide_bar and widget._autohide_bar != "off" and widget.isVisible():
+                if widget and widget._autohide_bar and widget.isVisible():
                     manager = getattr(widget, "_autohide_manager", None)
                     if manager and hasattr(manager, "_hide_timer") and manager._hide_timer:
                         manager._hide_timer.start(manager._autohide_delay)

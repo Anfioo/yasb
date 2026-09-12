@@ -137,14 +137,14 @@ class Bar(QWidget):
 
         self.update_app_bar()
 
-        auto_hide_mode = self._window_flags["auto_hide"]
-        if auto_hide_mode == "on":
-            self._autohide_manager = AutoHideManager(self, self)
-            self._autohide_manager.setup_autohide()
-        elif auto_hide_mode == "smart":
-            smart_config = self.config.window_flags.smart_auto_hide.model_dump()
-            self._autohide_manager = SmartAutoHideManager(self, smart_config, self)
-            self._autohide_manager.setup()
+        if self._window_flags["auto_hide"]:
+            if self._window_flags.get("auto_hide_mode", "normal") == "smart":
+                smart_config = self.config.window_flags.smart_auto_hide.model_dump()
+                self._autohide_manager = SmartAutoHideManager(self, smart_config, self)
+                self._autohide_manager.setup()
+            else:
+                self._autohide_manager = AutoHideManager(self, self)
+                self._autohide_manager.setup_autohide()
 
         if self._window_flags["hide_on_maximized"] and not self._window_flags["windows_app_bar"]:
             self._maximized_watcher = MaximizedWindowWatcher(self, self)

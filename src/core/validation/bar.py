@@ -42,16 +42,9 @@ class BarWindowFlags(CustomBaseModel):
     windows_app_bar: bool = False
     hide_on_fullscreen: bool = False
     hide_on_maximized: bool = False
-    auto_hide: Literal["off", "on", "smart"] = "off"
+    auto_hide: bool = False
+    auto_hide_mode: Literal["normal", "smart"] = "normal"
     smart_auto_hide: SmartAutoHideConfig = SmartAutoHideConfig()
-
-    @field_validator("auto_hide", mode="before")
-    @classmethod
-    def _coerce_auto_hide(cls, v):
-        """兼容旧配置：true/false 布尔值自动转换为 on/off。"""
-        if isinstance(v, bool):
-            return "on" if v else "off"
-        return v
 
 
 class BarDimensions(CustomBaseModel):
