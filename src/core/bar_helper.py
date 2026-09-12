@@ -1002,6 +1002,13 @@ class SmartAutoHideManager(QObject):
     def is_locked(self):
         return self._is_locked
 
+    def lock_now(self):
+        """立即锁定（供右键菜单等外部调用）。"""
+        if self._is_enabled and not self._is_locked:
+            logging.debug("智能自动隐藏：手动锁定")
+            self._stop_lock_progress()
+            self._enter_locked_state()
+
     def cleanup(self):
         """清理资源。"""
         self._is_enabled = False
@@ -1469,6 +1476,13 @@ class BarContextMenu:
         action_smart.setChecked(current_mode == "smart")
         action_smart.triggered.connect(self._enable_smart_autohide)
 
+        # 智能模式下且未锁定时，显示"立即锁定"选项
+        if current_mode == "smart":
+            manager = getattr(self.parent, "_autohide_manager", None)
+            if manager and isinstance(manager, SmartAutoHideManager) and not manager.is_locked():
+                lock_action = self._menu.addAction("锁定")
+                lock_action.triggered.connect(self._lock_now)
+
         reload_action = self._menu.addAction("重载栏")
         reload_action.triggered.connect(partial(reload_application, "正在从右键菜单重载栏..."))
 
@@ -1747,6 +1761,15 @@ class BarContextMenu:
 
         except Exception as e:
             logging.error("Failed to disable autohide: %s", e)
+
+    def _lock_now(self):
+        """智能模式下立即锁定栏。"""
+        try:
+            manager = getattr(self.parent, "_autohide_manager", None)
+            if manager and isinstance(manager, SmartAutoHideManager):
+                manager.lock_now()
+        except Exception as e:
+            logging.error("Failed to lock bar: %s", e)
 
 
 class AutoWidthManager(QObject):
