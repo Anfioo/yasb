@@ -739,12 +739,18 @@ class SmartAutoHideManager(QObject):
         self.bar_widget.raise_()
 
         # 如果鼠标已经在栏上，延迟启动悬停锁定进度（避免 Enter 事件遗漏）
-        if self._config.get("hover_to_lock", True):
+        if self._config.get("hover_to_lock", False):
             QTimer.singleShot(300, self._start_lock_progress_if_cursor_over)
 
     def _on_hide_timer(self):
         """短延迟隐藏计时器回调：栏隐藏，显示检测区，开始锁定倒计时。"""
         if not self._is_enabled or self._is_locked:
+            return
+        # 如果有弹出菜单/子窗口活跃，推迟隐藏（与普通 AutoHideManager 行为一致）
+        if self._should_stay_visible():
+            logging.debug("智能自动隐藏：有弹出窗口活跃，推迟隐藏")
+            if self._hide_timer:
+                self._hide_timer.start(self._autohide_delay)
             return
         logging.debug("智能自动隐藏：短延迟隐藏触发，栏隐藏，启动锁定倒计时")
 
@@ -788,7 +794,7 @@ class SmartAutoHideManager(QObject):
         self.bar_widget.raise_()
 
         # 检测区触发显示后，如果鼠标已在栏空白处，启动悬停锁定进度
-        if self._config.get("hover_to_lock", True):
+        if self._config.get("hover_to_lock", False):
             QTimer.singleShot(300, self._start_lock_progress_if_cursor_over)
 
     def _lock(self):
@@ -801,6 +807,7 @@ class SmartAutoHideManager(QObject):
             self._lock_timer.start(self._config.get("lock_timeout", 15000))
             return
         logging.debug("智能自动隐藏：锁定倒计时结束，进入锁定状态")
+        self._stop_lock_progress()
         self._enter_locked_state()
 
     def _should_stay_visible(self) -> bool:
@@ -864,7 +871,7 @@ class SmartAutoHideManager(QObject):
 
     def _on_lock_progress_tick(self):
         """悬停锁定进度计时器回调（解锁可见态）。"""
-        if not self._config.get("hover_to_lock", True):
+        if not self._config.get("hover_to_lock", False):
             self._lock_progress_timer.stop()
             return
 
@@ -908,7 +915,7 @@ class SmartAutoHideManager(QObject):
         """如果鼠标当前在栏的空白区域，则启动悬停锁定进度。"""
         if not self._is_enabled or self._is_locked or not self.bar_widget.isVisible():
             return
-        if self._config.get("hover_to_lock", True) and self._is_cursor_on_empty_area():
+        if self._config.get("hover_to_lock", False) and self._is_cursor_on_empty_area():
             self._lock_progress_elapsed = 0
             self._lock_progress_timer.start()
 
@@ -943,7 +950,7 @@ class SmartAutoHideManager(QObject):
         if is_bar_target and not self._is_locked:
             # 双击空白处立即隐藏
             if event.type() == QEvent.Type.MouseButtonDblClick:
-                if self._config.get("double_click_to_hide", True):
+                if self._config.get("double_click_to_hide", True) and self._is_cursor_on_empty_area():
                     self._stop_lock_progress()
                     if self._hide_timer:
                         self._hide_timer.stop()
@@ -954,7 +961,7 @@ class SmartAutoHideManager(QObject):
             elif event.type() == QEvent.Type.Enter and watched is self.bar_widget:
                 if self._hide_timer:
                     self._hide_timer.stop()
-                if self._config.get("hover_to_lock", True):
+                if self._config.get("hover_to_lock", False):
                     self._lock_progress_elapsed = 0
                     self._lock_progress_timer.start()
             # 鼠标离开栏：停止悬停锁定进度，启动短延迟隐藏
@@ -1719,6 +1726,11 @@ class BarContextMenu:
             if not self.parent._autohide_manager.is_enabled():
                 self.parent._autohide_manager.setup_autohide()
 
+            # 同步栏的自动隐藏状态标记
+            self.parent._autohide_bar = True
+            self.parent._window_flags["auto_hide"] = True
+            self.parent._window_flags["auto_hide_mode"] = "normal"
+
         except Exception as e:
             logging.error("Failed to enable autohide: %s", e)
 
@@ -1745,6 +1757,11 @@ class BarContextMenu:
             if not self.parent._autohide_manager.is_enabled():
                 self.parent._autohide_manager.setup()
 
+            # 同步栏的自动隐藏状态标记
+            self.parent._autohide_bar = True
+            self.parent._window_flags["auto_hide"] = True
+            self.parent._window_flags["auto_hide_mode"] = "smart"
+
         except Exception as e:
             logging.error("Failed to enable smart autohide: %s", e)
 
@@ -1758,6 +1775,10 @@ class BarContextMenu:
             # Ensure bar is visible after disabling autohide
             if not self.parent.isVisible():
                 self.parent.show()
+
+            # 同步栏的自动隐藏状态标记
+            self.parent._autohide_bar = False
+            self.parent._window_flags["auto_hide"] = False
 
         except Exception as e:
             logging.error("Failed to disable autohide: %s", e)

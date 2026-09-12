@@ -982,7 +982,22 @@
             "windows_app_bar": false,
             "hide_on_fullscreen": false,
             "hide_on_maximized": false,
-            "auto_hide": false
+            "auto_hide": false,
+            "auto_hide_mode": "normal",
+            "smart_auto_hide": {
+              "double_click_to_hide": true,
+              "hover_to_lock": false,
+              "indicator_auto_hide": true,
+              "indicator_opacity": 0.6,
+              "indicator_size": 28,
+              "lock_hover_duration": 800,
+              "lock_icon": "",
+              "lock_timeout": 15000,
+              "progress_background_color": "#555555",
+              "progress_color": "#ffffff",
+              "progress_thickness": 3,
+              "unlock_hover_duration": 500
+            }
           }
         },
         "dimensions": {
@@ -1190,6 +1205,18 @@
           "default": false,
           "title": "Auto Hide",
           "type": "boolean"
+        },
+        "auto_hide_mode": {
+          "default": "normal",
+          "enum": [
+            "normal",
+            "smart"
+          ],
+          "title": "Auto Hide Mode",
+          "type": "string"
+        },
+        "smart_auto_hide": {
+          "$ref": "#/$defs/SmartAutoHideConfig"
         }
       },
       "title": "BarWindowFlags",
@@ -12849,6 +12876,85 @@
       "title": "SshProviderConfig",
       "type": "object"
     },
+    "SmartAutoHideConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "unlock_hover_duration": {
+          "default": 500,
+          "maximum": 5000,
+          "minimum": 100,
+          "title": "Unlock Hover Duration",
+          "type": "integer"
+        },
+        "lock_timeout": {
+          "default": 15000,
+          "maximum": 300000,
+          "minimum": 1000,
+          "title": "Lock Timeout",
+          "type": "integer"
+        },
+        "lock_icon": {
+          "default": "",
+          "title": "Lock Icon",
+          "type": "string"
+        },
+        "indicator_size": {
+          "default": 28,
+          "maximum": 64,
+          "minimum": 16,
+          "title": "Indicator Size",
+          "type": "integer"
+        },
+        "progress_color": {
+          "default": "#ffffff",
+          "title": "Progress Color",
+          "type": "string"
+        },
+        "progress_background_color": {
+          "default": "#555555",
+          "title": "Progress Background Color",
+          "type": "string"
+        },
+        "progress_thickness": {
+          "default": 3,
+          "maximum": 8,
+          "minimum": 1,
+          "title": "Progress Thickness",
+          "type": "integer"
+        },
+        "indicator_opacity": {
+          "default": 0.6,
+          "maximum": 1.0,
+          "minimum": 0.1,
+          "title": "Indicator Opacity",
+          "type": "number"
+        },
+        "double_click_to_hide": {
+          "default": true,
+          "title": "Double Click To Hide",
+          "type": "boolean"
+        },
+        "indicator_auto_hide": {
+          "default": true,
+          "title": "Indicator Auto Hide",
+          "type": "boolean"
+        },
+        "hover_to_lock": {
+          "default": false,
+          "title": "Hover To Lock",
+          "type": "boolean"
+        },
+        "lock_hover_duration": {
+          "default": 800,
+          "maximum": 5000,
+          "minimum": 100,
+          "title": "Lock Hover Duration",
+          "type": "integer"
+        }
+      },
+      "title": "SmartAutoHideConfig",
+      "type": "object"
+    },
     "StackConfig": {
       "additionalProperties": false,
       "properties": {
@@ -16160,8 +16266,23 @@
           "window_flags": {
             "always_on_top": false,
             "auto_hide": false,
+            "auto_hide_mode": "normal",
             "hide_on_fullscreen": false,
             "hide_on_maximized": false,
+            "smart_auto_hide": {
+              "double_click_to_hide": true,
+              "hover_to_lock": false,
+              "indicator_auto_hide": true,
+              "indicator_opacity": 0.6,
+              "indicator_size": 28,
+              "lock_hover_duration": 800,
+              "lock_icon": "",
+              "lock_timeout": 15000,
+              "progress_background_color": "#555555",
+              "progress_color": "#ffffff",
+              "progress_thickness": 3,
+              "unlock_hover_duration": 500
+            },
             "windows_app_bar": false
           }
         }
