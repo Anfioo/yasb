@@ -201,7 +201,10 @@ class BarAnimationManager(QObject):
             if not bar_geometry.contains(cursor_pos) and not autohide_mgr._is_mouse_in_safe_zone(
                 cursor_pos, bar_geometry
             ):
-                if autohide_mgr._hide_timer:
+                if isinstance(autohide_mgr, SmartAutoHideManager):
+                    if autohide_mgr._lock_timer:
+                        autohide_mgr._lock_timer.start(autohide_mgr._config.get("lock_timeout", 15000))
+                elif hasattr(autohide_mgr, "_hide_timer") and autohide_mgr._hide_timer:
                     autohide_mgr._hide_timer.start(autohide_mgr._autohide_delay)
 
     def _on_hide_finished(self):
