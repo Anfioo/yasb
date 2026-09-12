@@ -593,6 +593,7 @@ class SmartAutoHideManager(QObject):
         if not self._is_enabled:
             return
         self._is_locked = True
+        logging.debug("智能自动隐藏：进入锁定状态")
 
         # 停止所有计时器
         if self._hide_timer:
@@ -618,6 +619,7 @@ class SmartAutoHideManager(QObject):
         if not self._is_enabled:
             return
         self._is_locked = False
+        logging.debug("智能自动隐藏：解锁，显示完整栏")
 
         # 隐藏指示器
         if self._indicator:
@@ -644,6 +646,7 @@ class SmartAutoHideManager(QObject):
         """短延迟隐藏计时器回调：栏隐藏，显示检测区，开始锁定倒计时。"""
         if not self._is_enabled or self._is_locked:
             return
+        logging.debug("智能自动隐藏：短延迟隐藏触发，栏隐藏，启动锁定倒计时")
 
         # 隐藏栏（与普通自动隐藏一致的动画）
         anim_mgr = getattr(self.bar_widget, "_animation_manager", None)
@@ -666,6 +669,7 @@ class SmartAutoHideManager(QObject):
         """检测区鼠标进入：显示栏，停止锁定倒计时（与 AutoHideManager.show_bar 接口一致）。"""
         if not self._is_enabled or self._is_locked or self.bar_widget.isVisible():
             return
+        logging.debug("智能自动隐藏：检测区触发，显示栏，停止锁定倒计时")
 
         # 停止锁定倒计时
         if self._lock_timer:
@@ -689,14 +693,18 @@ class SmartAutoHideManager(QObject):
             return
         # 如果有弹出菜单打开，延迟锁定
         if self._should_stay_visible():
+            logging.debug("智能自动隐藏：有弹出窗口活跃，延迟锁定")
             self._lock_timer.start(self._config.get("lock_timeout", 15000))
             return
+        logging.debug("智能自动隐藏：锁定倒计时结束，进入锁定状态")
         self._enter_locked_state()
 
     def _should_stay_visible(self) -> bool:
-        """检查栏是否应保持可见（弹出菜单/子窗口打开时）。"""
+        """检查是否应推迟锁定：仅当栏的弹出菜单/子窗口活跃时。"""
+        # 有 Qt 弹出菜单（QMenu 等）
         if QApplication.activePopupWidget():
             return True
+        # 当前活跃窗口是栏的子窗口（如组件弹出面板）
         active = QApplication.activeWindow()
         if active and active is not self.bar_widget:
             p = active.parent() if active else None
@@ -704,16 +712,20 @@ class SmartAutoHideManager(QObject):
                 if p is self.bar_widget:
                     return True
                 p = p.parent()
+        # 遍历顶层窗口，检查是否有栏的子窗口可见且鼠标在其上方
         cursor_pos = QCursor.pos()
         for w in QApplication.topLevelWidgets():
-            if w is self.bar_widget or w is self._indicator or not w.isVisible():
+            if w is self.bar_widget or w is self._indicator or w is self._detection_zone or not w.isVisible():
                 continue
             p = w.parent() if w else None
+            is_child = False
             while p:
                 if p is self.bar_widget:
-                    return True
+                    is_child = True
+                    break
                 p = p.parent()
-            if w.geometry().contains(cursor_pos):
+            # 只有栏的子窗口（弹出面板）且鼠标在其上方才推迟锁定
+            if is_child and w.geometry().contains(cursor_pos):
                 return True
         return False
 
