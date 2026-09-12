@@ -421,6 +421,8 @@ class LockIndicatorWidget(QWidget):
 
     窗口本身覆盖整个栏的宽度（透明），仅在中心绘制锁图标和进度环，
     这样鼠标在栏的任意位置悬停都能触发解锁。
+    注意：不使用 setWindowOpacity，否则全透明时 Windows 会穿透鼠标事件。
+    透明度通过绘制颜色的 alpha 通道控制。
     """
 
     def __init__(self, config: dict, parent=None):
@@ -438,7 +440,13 @@ class LockIndicatorWidget(QWidget):
             | Qt.WindowType.NoDropShadowWindowHint
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setWindowOpacity(config.get("indicator_opacity", 0.6))
+        # 不设置 setWindowOpacity，保持窗口可接收鼠标事件
+
+    def _apply_opacity(self, color_str: str) -> QColor:
+        """将配置的不透明度应用到颜色上。"""
+        c = QColor(color_str)
+        c.setAlphaF(c.alphaF() * self._config.get("indicator_opacity", 0.6))
+        return c
 
     def set_hover_visible(self, visible: bool):
         """设置鼠标悬停时是否显示锁图标。"""
@@ -459,12 +467,15 @@ class LockIndicatorWidget(QWidget):
         self.update()
 
     def paintEvent(self, event):
-        # 未悬停且无进度时不绘制任何内容（完全透明，仅保留鼠标检测区域）
-        if not self._hover_visible and self._progress == 0:
-            return
-
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        # 未悬停且无进度时：绘制一个极低透明度的背景，
+        # 确保窗口有非零 alpha 像素以接收鼠标事件（Windows 分层窗口特性）
+        if not self._hover_visible and self._progress == 0:
+            painter.fillRect(self.rect(), QColor(0, 0, 0, 1))
+            painter.end()
+            return
 
         size = self._config.get("indicator_size", 28)
         cx = self.width() // 2
@@ -474,7 +485,7 @@ class LockIndicatorWidget(QWidget):
 
         # 绘制进度环背景
         thickness = self._config.get("progress_thickness", 3)
-        bg_color = QColor(self._config.get("progress_background_color", "#555555"))
+        bg_color = self._apply_opacity(self._config.get("progress_background_color", "#555555"))
         pen_bg = QPen(bg_color, thickness)
         pen_bg.setCapStyle(Qt.PenCapStyle.RoundCap)
         painter.setPen(pen_bg)
@@ -482,7 +493,7 @@ class LockIndicatorWidget(QWidget):
 
         # 绘制解锁进度环
         if self._progress > 0:
-            fg_color = QColor(self._config.get("progress_color", "#ffffff"))
+            fg_color = self._apply_opacity(self._config.get("progress_color", "#ffffff"))
             pen_fg = QPen(fg_color, thickness)
             pen_fg.setCapStyle(Qt.PenCapStyle.RoundCap)
             painter.setPen(pen_fg)
@@ -490,7 +501,8 @@ class LockIndicatorWidget(QWidget):
             painter.drawArc(rect, 90 * 16, span_angle)
 
         # 绘制锁图标
-        painter.setPen(QColor(self._config.get("progress_color", "#ffffff")))
+        icon_color = self._apply_opacity(self._config.get("progress_color", "#ffffff"))
+        painter.setPen(icon_color)
         font = QFont()
         font.setPointSize(max(8, size // 3))
         font.setFamily("Segoe MDL2 Assets")
@@ -763,12 +775,14 @@ class SmartAutoHideManager(QObject):
         # 指示器的鼠标事件（锁定态）
         if watched is self._indicator and self._is_locked:
             if event.type() == QEvent.Type.Enter:
+                logging.debug("智能自动隐藏：鼠标进入指示器区域")
                 # 鼠标进入：显示锁图标，开始解锁进度
                 if self._indicator:
                     self._indicator.set_hover_visible(True)
                 self._unlock_elapsed = 0
                 self._unlock_timer.start()
             elif event.type() == QEvent.Type.Leave:
+                logging.debug("智能自动隐藏：鼠标离开指示器区域")
                 # 鼠标离开：停止进度，隐藏锁图标
                 self._unlock_timer.stop()
                 self._unlock_elapsed = 0
