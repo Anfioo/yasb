@@ -107,7 +107,7 @@ class DownloadWorker(QThread):
                 with open(self._output_path, "wb") as file_handle:
                     while True:
                         if self.isInterruptionRequested():
-                            raise InterruptedError("Download cancelled")
+                            raise InterruptedError("下载已取消")
                         chunk = response.read(chunk_size)
                         if not chunk:
                             break

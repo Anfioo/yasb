@@ -17,15 +17,15 @@ class MenuItemConfig(CustomBaseModel):
 
 
 class MenuLabelsConfig(CustomBaseModel):
-    shutdown: str = "Shutdown"
-    restart: str = "Restart"
-    hibernate: str = "Hibernate"
-    logout: str = "Logout"
-    lock: str = "Lock"
-    sleep: str = "Sleep"
-    system: str = "System Settings"
-    about: str = "About This PC"
-    task_manager: str = "Task Manager"
+    shutdown: str = "关机"
+    restart: str = "重启"
+    hibernate: str = "休眠"
+    logout: str = "注销"
+    lock: str = "锁定"
+    sleep: str = "睡眠"
+    system: str = "系统设置"
+    about: str = "关于此电脑"
+    task_manager: str = "任务管理器"
 
 
 class CallbacksHomeConfig(CallbacksConfig):

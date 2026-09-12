@@ -13,10 +13,10 @@ class GlazewmBindingModeCallbacksConfig(CallbacksConfig):
 
 class GlazewmBindingModeConfig(CustomBaseModel):
     label: str = "<span>{icon}</span> {binding_mode}"
-    label_alt: str = "<span>{icon}</span> Current mode: {binding_mode}"
+    label_alt: str = "<span>{icon}</span> 当前模式：{binding_mode}"
     glazewm_server_uri: str = "ws://localhost:6123"
     hide_if_no_active: bool = True
-    label_if_no_active: str = "No binding mode active"
+    label_if_no_active: str = "无活动绑定模式"
     default_icon: str = "\uf071"
     icons: dict[str, str] = {
         "none": "",

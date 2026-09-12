@@ -51,39 +51,39 @@ class RestoreOutcome:
 def validate_member(name: str) -> PurePosixPath:
     """Validate one archive entry name and return the safe relative path."""
     if not name or name in (".", ".."):
-        raise UnsafePathError(f"Archive contains an invalid entry name: {name!r}")
+        raise UnsafePathError(f"归档包含无效的条目名称：{name!r}")
 
     if _CONTROL.search(name):
-        raise UnsafePathError(f"Archive entry contains control characters: {name!r}")
+        raise UnsafePathError(f"归档条目包含控制字符：{name!r}")
 
     # A ZIP may use either separator, so normalise before checking.
     unified = name.replace("\\", "/")
 
     if unified.startswith("/"):
-        raise UnsafePathError(f"Archive entry is an absolute path: {name!r}")
+        raise UnsafePathError(f"归档条目是绝对路径：{name!r}")
     if _DRIVE.match(unified):
-        raise UnsafePathError(f"Archive entry has a drive letter: {name!r}")
+        raise UnsafePathError(f"归档条目包含盘符：{name!r}")
     if unified.startswith("//"):
-        raise UnsafePathError(f"Archive entry is a UNC path: {name!r}")
+        raise UnsafePathError(f"归档条目是 UNC 路径：{name!r}")
     if ":" in unified:
         # Also catches NTFS alternate data streams like "notes.txt:hidden".
-        raise UnsafePathError(f"Archive entry contains a colon: {name!r}")
+        raise UnsafePathError(f"归档条目包含冒号：{name!r}")
 
     parts = [part for part in unified.split("/") if part != ""]
     if not parts:
-        raise UnsafePathError(f"Archive entry resolves to nothing: {name!r}")
+        raise UnsafePathError(f"归档条目解析为空：{name!r}")
 
     for part in parts:
         if part == "..":
-            raise UnsafePathError(f"Archive entry traverses upward: {name!r}")
+            raise UnsafePathError(f"归档条目向上遍历路径：{name!r}")
         if part == ".":
-            raise UnsafePathError(f"Archive entry contains a '.' component: {name!r}")
+            raise UnsafePathError(f"归档条目包含 '.' 组件：{name!r}")
         # Windows strips trailing dots and spaces, so "foo. " and "foo" collide.
         if part != part.rstrip(". "):
-            raise UnsafePathError(f"Archive entry has a trailing dot or space: {name!r}")
+            raise UnsafePathError(f"归档条目末尾有句点或空格：{name!r}")
         stem = part.split(".")[0].upper()
         if stem in RESERVED_NAMES:
-            raise UnsafePathError(f"Archive entry uses the reserved device name {stem}: {name!r}")
+            raise UnsafePathError(f"归档条目使用了保留设备名 {stem}：{name!r}")
 
     return PurePosixPath(*parts)
 
@@ -117,7 +117,7 @@ def create_safety_archive(
         with zipfile.ZipFile(target, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
             for path in sorted(root.rglob("*")):
                 if should_stop is not None and should_stop():
-                    raise Cancelled("The restore was cancelled")
+                    raise Cancelled("还原已取消")
                 if path.is_symlink() or not path.is_file():
                     continue
                 try:
@@ -156,7 +156,7 @@ def restore_archive(
     nothing to unwind in between.
     """
     if not archive_path.is_file():
-        raise RestoreError(f"Snapshot archive not found: {archive_path}")
+        raise RestoreError(f"未找到快照归档：{archive_path}")
 
     root.mkdir(parents=True, exist_ok=True)
     staging = root.parent / f".{root.name}.restore-{secrets.token_hex(4)}"
@@ -166,7 +166,7 @@ def restore_archive(
     try:
         with zipfile.ZipFile(archive_path) as archive:
             if archive.testzip() is not None:
-                raise RestoreError("Snapshot archive is corrupt")
+                raise RestoreError("快照归档已损坏")
             members = _validated_members(archive)
 
             if safety_dir is not None:
@@ -175,7 +175,7 @@ def restore_archive(
             staging.mkdir(parents=True, exist_ok=False)
             for info, relative in members:
                 if should_stop is not None and should_stop():
-                    raise Cancelled("The restore was cancelled")
+                    raise Cancelled("还原已取消")
                 target = staging / relative
                 target.parent.mkdir(parents=True, exist_ok=True)
                 with archive.open(info) as source, target.open("wb") as sink:
@@ -195,15 +195,15 @@ def restore_archive(
         if not _rollback(root, safety):
             logger.error("rollback failed; previous configuration is at %s", safety)
             raise RestoreError(
-                "The restore failed and your previous configuration could not be put back. "
-                f"A copy of it is saved at {safety}."
+                "还原失败，且无法恢复之前的配置。"
+                f"配置副本已保存在 {safety}。"
             ) from exc
         if isinstance(exc, RestoreError | UnsafePathError):
             raise
         if isinstance(exc, zipfile.BadZipFile):
-            raise RestoreError(f"Snapshot archive is not a valid ZIP: {exc}") from exc
+            raise RestoreError(f"快照归档不是有效的 ZIP 文件：{exc}") from exc
         if isinstance(exc, OSError):
-            raise RestoreError(f"Restore failed: {exc.strerror or exc}") from exc
+            raise RestoreError(f"还原失败：{exc.strerror or exc}") from exc
         raise
     finally:
         shutil.rmtree(staging, ignore_errors=True)
@@ -220,17 +220,17 @@ def extract_archive(
     not restore_archive, which would wipe whatever folder the user picked.
     """
     if not archive_path.is_file():
-        raise RestoreError(f"Snapshot archive not found: {archive_path}")
+        raise RestoreError(f"未找到快照归档：{archive_path}")
 
     written: list[str] = []
     with zipfile.ZipFile(archive_path) as archive:
         if archive.testzip() is not None:
-            raise RestoreError("Snapshot archive is corrupt")
+            raise RestoreError("快照归档已损坏")
         members = _validated_members(archive)
         target.mkdir(parents=True, exist_ok=True)
         for info, relative in members:
             if should_stop is not None and should_stop():
-                raise Cancelled("The save was cancelled")
+                raise Cancelled("保存已取消")
             destination = target / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
             with archive.open(info) as source, destination.open("wb") as sink:

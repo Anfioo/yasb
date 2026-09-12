@@ -156,7 +156,7 @@ def create_archive(
         with zipfile.ZipFile(staging, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
             for candidate in included:
                 if should_stop is not None and should_stop():
-                    raise Cancelled("Archiving was cancelled")
+                    raise Cancelled("归档已取消")
                 try:
                     archive.write(candidate.absolute, arcname=candidate.relative)
                 except OSError as exc:

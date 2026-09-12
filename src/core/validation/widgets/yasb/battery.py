@@ -50,7 +50,7 @@ class CallbacksBatteryConfig(CallbacksConfig):
 
 class BatteryConfig(CustomBaseModel):
     label: str = "{icon}"
-    label_alt: str = "{percent}% | remaining: {time_remaining}"
+    label_alt: str = "{percent}% | 剩余：{time_remaining}"
     class_name: str = ""
     update_interval: int = Field(default=5000, ge=0, le=60000)
     time_remaining_natural: bool = False

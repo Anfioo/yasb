@@ -21,7 +21,7 @@ class LibreMenuConfig(CustomBaseModel):
     direction: str = "down"
     offset_top: int = 6
     offset_left: int = 0
-    header_label: str = "YASB HW Monitor"
+    header_label: str = "YASB 硬件监控"
     precision: int = 2
     columns: int = 1
     sensors: list[LibreMenuSensorConfig] = []
@@ -58,8 +58,8 @@ class LibreMonitorConfig(CustomBaseModel):
     histogram_fixed_min: float | None = Field(default=None, ge=-10000.0, le=10000.0)
     histogram_fixed_max: float | None = Field(default=None, ge=-10000.0, le=10000.0)
     sensor_id_error_label: str = "N/A"
-    connection_error_label: str = "Connection error..."
-    auth_error_label: str = "Auth Failed..."
+    connection_error_label: str = "连接错误..."
+    auth_error_label: str = "认证失败..."
     server_host: str = "localhost"
     server_port: int = Field(default=8085, ge=0, le=65535)
     server_username: str = ""

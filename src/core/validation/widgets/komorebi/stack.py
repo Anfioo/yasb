@@ -10,7 +10,7 @@ class StackRewriteConfig(CustomBaseModel):
 
 
 class StackConfig(CustomBaseModel):
-    label_offline: str = "Komorebi Offline"
+    label_offline: str = "Komorebi 离线"
     label_window: str = "{title}"
     label_window_active: str = "{title}"
     label_no_window: str = ""

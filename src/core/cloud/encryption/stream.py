@@ -140,7 +140,7 @@ def encrypt_snapshot(
 
         for index in range(frames):
             if should_stop is not None and should_stop():
-                raise Cancelled("Encryption was cancelled")
+                raise Cancelled("加密已取消")
             block = src.read(frame_size)
             is_last = index == frames - 1
             nonce = _frame_nonce(nonce_prefix, index, is_last)
@@ -266,7 +266,7 @@ def decrypt_snapshot(
             with GcmKey(file_key) as key, staging.open("wb") as dst:
                 for index in range(frames):
                     if should_stop is not None and should_stop():
-                        raise Cancelled("Decryption was cancelled")
+                        raise Cancelled("解密已取消")
                     raw_len = _read_exactly(src, _FRAME_LEN.size, "frame length")
                     (frame_len,) = _FRAME_LEN.unpack(raw_len)
 

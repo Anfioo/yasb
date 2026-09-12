@@ -288,9 +288,9 @@ class GcmKey:
     def decrypt(self, nonce: bytes, ciphertext: bytes, tag: bytes, aad: bytes = b"") -> bytes:
         """Decrypt and verify the tag."""
         if len(nonce) != NONCE_LEN:
-            raise CryptoError(f"GCM requires a {NONCE_LEN}-byte nonce, got {len(nonce)}")
+            raise CryptoError(f"GCM 需要 {NONCE_LEN} 字节的 nonce，实际为 {len(nonce)}")
         if len(tag) != TAG_LEN:
-            raise IntegrityError(f"Expected a {TAG_LEN}-byte tag, got {len(tag)}")
+            raise IntegrityError(f"应为 {TAG_LEN} 字节的标签，实际为 {len(tag)}")
 
         tag_buffer = _buf(tag)
         info, _keepalive = self._mode_info(nonce, aad, tag_buffer)

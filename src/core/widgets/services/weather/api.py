@@ -72,10 +72,10 @@ class WeatherDataFetcher(QObject):
                 reply.deleteLater()
                 return
             elif error == QNetworkReply.NetworkError.HostNotFoundError:
-                raise HostNotFoundError("No internet connection or host not found. Unable to fetch weather.")
+                raise HostNotFoundError("无网络连接或找不到主机。无法获取天气信息。")
             elif status in {400, 401, 403}:
                 data = json.loads(reply.readAll().data().decode())
-                raise BadRequestError(f"Weather response error {status}: {data['error']['message']}")
+                raise BadRequestError(f"天气响应错误 {status}：{data['error']['message']}")
             else:
                 logging.warning("Weather API returned error %s. Will retry on next interval.", status)
         except json.JSONDecodeError as e:

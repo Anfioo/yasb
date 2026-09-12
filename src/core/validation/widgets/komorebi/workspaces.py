@@ -3,8 +3,8 @@ from core.validation.widgets.base_model import CustomBaseModel
 
 class ToggleWorkspaceLayerConfig(CustomBaseModel):
     enabled: bool = False
-    tiling_label: str = "Tiling"
-    floating_label: str = "Floating"
+    tiling_label: str = "平铺"
+    floating_label: str = "浮动"
 
 
 class KomorebiAppIconsConfig(CustomBaseModel):
@@ -18,12 +18,12 @@ class KomorebiAppIconsConfig(CustomBaseModel):
 
 
 class KomorebiWorkspacesConfig(CustomBaseModel):
-    label_offline: str = "Komorebi Offline"
+    label_offline: str = "Komorebi 离线"
     label_workspace_btn: str = "{index}"
     label_workspace_active_btn: str = "{index}"
     label_workspace_populated_btn: str = "{index}"
     label_default_name: str = ""
-    label_float_override: str = "Override Active"
+    label_float_override: str = "覆盖活动"
     toggle_workspace_layer: ToggleWorkspaceLayerConfig = ToggleWorkspaceLayerConfig()
     hide_if_offline: bool = False
     label_zero_index: bool = False

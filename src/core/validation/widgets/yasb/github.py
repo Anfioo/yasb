@@ -61,7 +61,7 @@ class GithubIconsConfig(CustomBaseModel):
 
 class GithubConfig(CustomBaseModel):
     label: str = "{icon}"
-    label_alt: str = "{data} Notifications"
+    label_alt: str = "{data} 条通知"
     update_interval: int = Field(default=600, ge=60, le=3600)
     token: str = ""
     tooltip: bool = True

@@ -29,7 +29,7 @@ class CallbacksGlucoseMonitorConfig(CallbacksConfig):
 class GlucoseMonitorConfig(CustomBaseModel):
     label: str = "<span>\U0001fa78<span><span class='sgv'>{sgv}</span><span>{direction}</span>"
     error_label: str = "<span>\U0001fa78</span>{error_message}"
-    tooltip: str = "({sgv_delta}) {delta_time_in_minutes} min"
+    tooltip: str = "({sgv_delta}) {delta_time_in_minutes} 分钟"
     host: str = ""
     secret: str = ""
     secret_env_name: str = ""

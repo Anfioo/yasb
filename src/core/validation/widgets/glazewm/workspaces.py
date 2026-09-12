@@ -13,7 +13,7 @@ class GlazewmAppIconsConfig(CustomBaseModel):
 
 
 class GlazewmWorkspacesConfig(CustomBaseModel):
-    offline_label: str = "GlazeWM Offline"
+    offline_label: str = "GlazeWM 离线"
     populated_label: str | None = None
     empty_label: str | None = None
     active_populated_label: str | None = None

@@ -159,7 +159,7 @@ class VirtualDesktopApi:
         try:
             return com.manager.FindDesktop(GUID(guid))
         except (COMError, OSError, ValueError) as e:
-            raise VirtualDesktopError(f"No desktop with id {guid}") from e
+            raise VirtualDesktopError(f"找不到 ID 为 {guid} 的桌面") from e
 
     def list_desktops(self) -> list[DesktopInfo]:
         """Enumerate every desktop in Task View order, with names.
@@ -216,7 +216,7 @@ class VirtualDesktopApi:
             desktops = self.list_desktops()
             fallback = next((d for d in desktops if d.guid != guid), None)
             if fallback is None:
-                raise VirtualDesktopError("Cannot remove the only remaining desktop")
+                raise VirtualDesktopError("无法删除最后一个桌面")
             fallback_guid = fallback.guid
         com.manager.RemoveDesktop(self._find(guid), self._find(fallback_guid))
 
@@ -228,24 +228,24 @@ class VirtualDesktopApi:
         """
         com = self._ensure()
         if not self.supports_names:
-            raise VirtualDesktopError("Renaming desktops requires Windows 10 build 19041 or later")
+            raise VirtualDesktopError("重命名桌面需要 Windows 10 内部版本 19041 或更高版本")
         target = com.manager if com.interfaces.tier >= TIER_21313 else com.manager2
         if target is None:
-            raise VirtualDesktopError("This build reports no interface that can rename desktops")
+            raise VirtualDesktopError("当前系统版本没有可用于重命名桌面的接口")
         target.SetName(self._find(guid), HSTRING(name))
 
     def set_wallpaper(self, guid: str, path: str) -> None:
         """Set one desktop's wallpaper."""
         com = self._ensure()
         if not self.supports_wallpaper:
-            raise VirtualDesktopError("Per-desktop wallpapers require Windows 11")
+            raise VirtualDesktopError("单桌面壁纸需要 Windows 11")
         com.manager.SetWallpaper(self._find(guid), HSTRING(path))
 
     def set_wallpaper_all(self, path: str) -> None:
         """Set the wallpaper on every desktop."""
         com = self._ensure()
         if not self.supports_wallpaper:
-            raise VirtualDesktopError("Per-desktop wallpapers require Windows 11")
+            raise VirtualDesktopError("单桌面壁纸需要 Windows 11")
         com.manager.SetWallpaperForAllDesktops(HSTRING(path))
 
     def view_for_hwnd(self, hwnd: int) -> Any:

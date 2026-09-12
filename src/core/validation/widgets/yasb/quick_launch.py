@@ -45,7 +45,7 @@ class WebSearchEngineConfig(CustomBaseModel):
     name: str
     url: str
     icon: str = ""
-    description: str = "Search the web"
+    description: str = "搜索网页"
 
 
 class WebSearchProviderConfig(CustomBaseModel):
@@ -246,7 +246,7 @@ class QuickLaunchProvidersConfig(CustomBaseModel):
 
 class QuickLaunchConfig(CustomBaseModel):
     label: str = "\uf002"
-    search_placeholder: str = "Search applications..."
+    search_placeholder: str = "搜索应用程序..."
     remember_last_query: bool = False
     max_results: int = Field(default=50, ge=1, le=500)
     show_icons: bool = True

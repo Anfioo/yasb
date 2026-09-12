@@ -51,7 +51,7 @@ class VolumeConfig(CustomBaseModel):
     label: str = "{icon} {level}"
     label_alt: str = "{icon} {level}"
     class_name: str = ""
-    mute_text: str = "mute"
+    mute_text: str = "静音"
     tooltip: bool = True
     scroll_step: int = Field(default=2, ge=1, le=100)
     invert_wheel: bool = False

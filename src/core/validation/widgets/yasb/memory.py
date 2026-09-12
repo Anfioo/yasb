@@ -51,7 +51,7 @@ class MemoryMenuConfig(CustomBaseModel):
 
 class MemoryConfig(CustomBaseModel):
     label: str = "\uf4bc {virtual_mem_free}/{virtual_mem_total}"
-    label_alt: str = "\uf4bc VIRT: {virtual_mem_percent}% SWAP: {swap_mem_percent}%"
+    label_alt: str = "\uf4bc 虚拟：{virtual_mem_percent}% 交换：{swap_mem_percent}%"
     class_name: str = ""
     update_interval: int = Field(default=5000, ge=1000, le=60000)
     histogram_icons: list[str] = Field(

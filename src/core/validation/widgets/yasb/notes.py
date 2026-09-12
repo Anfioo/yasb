@@ -37,7 +37,7 @@ class NotesCallbacksConfig(CallbacksConfig):
 
 class NotesConfig(CustomBaseModel):
     label: str = "<span>\udb82\udd0c</span> {count}"
-    label_alt: str = "{count} notes"
+    label_alt: str = "{count} 条笔记"
     class_name: str = ""
     data_path: str = ""
     start_floating: bool = False

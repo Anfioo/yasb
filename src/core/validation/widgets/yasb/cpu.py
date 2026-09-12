@@ -51,7 +51,7 @@ class CpuMenuConfig(CustomBaseModel):
 
 class CpuConfig(CustomBaseModel):
     label: str = "\uf200 {info[histograms][cpu_percent]}"
-    label_alt: str = "\uf200 CPU: {info[percent][total]}% | freq: {info[freq][current]:.2f} Mhz"
+    label_alt: str = "\uf200 CPU：{info[percent][total]}% | 频率：{info[freq][current]:.2f} Mhz"
     class_name: str = ""
     update_interval: int = Field(default=1000, ge=1000, le=60000)
     histogram_icons: list[str] = Field(

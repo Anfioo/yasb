@@ -41,7 +41,7 @@ class BrightnessCallbacksConfig(CallbacksConfig):
 
 class BrightnessConfig(CustomBaseModel):
     label: str = "{icon}"
-    label_alt: str = "Brightness {percent}%"
+    label_alt: str = "亮度 {percent}%"
     tooltip: bool = True
     scroll_step: int = Field(default=1, ge=1, le=100)
     invert_wheel: bool = False

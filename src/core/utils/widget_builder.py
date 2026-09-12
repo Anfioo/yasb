@@ -95,13 +95,13 @@ class WidgetBuilder(QObject):
     def raise_alerts_if_errors_present(self):
         if self._invalid_widget_names:
             undefined_widgets = "\n".join(
-                [f' - The widget "{widget_name}" is undefined.' for widget_name in self._invalid_widget_names]
+                [f' - 组件 "{widget_name}" 未定义。' for widget_name in self._invalid_widget_names]
             )
             logging.error("Failed to add undefined widget(s) %s", undefined_widgets)
             raise_info_alert(
-                title=f"Failed to add undefined widget(s) in {DEFAULT_CONFIG_FILENAME}",
-                msg="Failed to add undefined widget(s) to bar.",
-                informative_msg="Please click 'Show Details' to find out more.",
+                title=f"无法在 {DEFAULT_CONFIG_FILENAME} 中添加未定义的组件",
+                msg="无法将未定义的组件添加到状态栏。",
+                informative_msg="请点击「显示详细信息」了解更多。",
                 additional_details=undefined_widgets,
             )
         if self._invalid_widget_options:
@@ -113,34 +113,34 @@ class WidgetBuilder(QObject):
             )
             logging.error("Failed to validate widget(s) due to invalid options %s", additional_details)
             raise_info_alert(
-                title=f"Failed to validate widget(s) in {DEFAULT_CONFIG_FILENAME}",
-                msg="Failed to validate widget(s) due to invalid options",
-                informative_msg="Please click 'Show Details' to find out more.",
+                title=f"无法验证 {DEFAULT_CONFIG_FILENAME} 中的组件",
+                msg="因选项无效，无法验证组件。",
+                informative_msg="请点击「显示详细信息」了解更多。",
                 additional_details=additional_details,
             )
 
         if self._invalid_widget_types:
             widget_names_and_types = "\n".join(
                 [
-                    f' - {widget_name} has unknown type "{widget_type}"'
+                    f' - {widget_name} 的类型 "{widget_type}" 未知'
                     for widget_name, widget_type in self._invalid_widget_types.items()
                 ]
             )
             logging.error("Failed to build widget(s) due to unknown widget type(s) %s", widget_names_and_types)
             raise_info_alert(
-                title=f"Failed to build widget(s) in {DEFAULT_CONFIG_FILENAME}",
-                msg="Failed to build widget(s) of unknown widget type(s)",
-                informative_msg="Click 'Show Details' to find out more.",
+                title=f"无法在 {DEFAULT_CONFIG_FILENAME} 中构建组件",
+                msg="因组件类型未知，无法构建组件。",
+                informative_msg="点击「显示详细信息」了解更多。",
                 additional_details=widget_names_and_types,
             )
         if self._missing_widget_types:
             widget_names = "\n".join([f" - {widget_name}" for widget_name in self._missing_widget_types])
             logging.error("Failed to import widget(s) due to missing widget type(s) %s", widget_names)
             raise_info_alert(
-                title=f"Failed to import widget(s) in {DEFAULT_CONFIG_FILENAME}",
-                msg="Failed to import widget(s) with missing widget type(s)",
-                informative_msg="Please click 'Show Details' to find out more.",
-                additional_details=f"The following widget(s) have no widget type defined:\n{widget_names}",
+                title=f"无法导入 {DEFAULT_CONFIG_FILENAME} 中的组件",
+                msg="因缺少组件类型，无法导入组件。",
+                informative_msg="请点击「显示详细信息」了解更多。",
+                additional_details=f"以下组件未定义组件类型：\n{widget_names}",
             )
 
     def _collect_nested_listeners(self, widget_names: list[str]) -> None:

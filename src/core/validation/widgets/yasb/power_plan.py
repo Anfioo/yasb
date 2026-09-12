@@ -25,7 +25,7 @@ class PowerPlanCallbacksConfig(CallbacksConfig):
 
 class PowerPlanConfig(CustomBaseModel):
     label: str = "\uf0e7 {active_plan}"
-    label_alt: str = "\uf0e7 Power Plan"
+    label_alt: str = "\uf0e7 电源计划"
     class_name: str = ""
     class_map: dict[str, str] = {}
     menu: PowerPlanMenuConfig = PowerPlanMenuConfig()

@@ -34,14 +34,14 @@ class VSCodeIconsConfig(CustomBaseModel):
 
 class VSCodeConfig(CustomBaseModel):
     label: str = "<span>\udb82\ude1e</span>"
-    label_alt: str = "<span>\udb82\ude1e</span> recents"
-    menu_title: str = "<span style='font-weight:bold'>VS code</span> recents"
+    label_alt: str = "<span>\udb82\ude1e</span> 最近"
+    menu_title: str = "<span style='font-weight:bold'>VS code</span> 最近"
     icons: VSCodeIconsConfig = VSCodeIconsConfig()
     truncate_to_root_dir: bool = False
     max_number_of_folders: int = Field(default=30, ge=0)
     max_number_of_files: int = Field(default=30, ge=0)
     state_storage_path: str = ""
-    modified_date_format: str = "Date modified: %Y-%m-%d %H:%M"
+    modified_date_format: str = "修改日期：%Y-%m-%d %H:%M"
     cli_command: str = "code"
     menu: VSCodeMenuConfig = VSCodeMenuConfig()
     keybindings: list[KeybindingConfig] = []
