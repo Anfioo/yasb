@@ -5,20 +5,20 @@ from core.setup.widgets_config import WIDGETS_CONFIG
 from core.setup.widgets_styles import WIDGET_STYLES
 
 WINDOW_MANAGER_GROUPS: tuple[tuple[str, str, str], ...] = (
-    ("komorebi", "Komorebi", "Workspace switcher with per-workspace app icons and scroll support"),
-    ("glazewm", "GlazeWM", "Workspace switcher - click to switch, scroll to cycle workspaces"),
-    ("windows_desktops", "Virtual Desktops", "Native Windows desktops - switch, rename, create and delete"),
+    ("komorebi", "Komorebi", "工作区切换器，支持每个工作区的应用图标与滚动切换"),
+    ("glazewm", "GlazeWM", "工作区切换器——点击切换，滚动循环工作区"),
+    ("windows_desktops", "虚拟桌面", "Windows 原生桌面——切换、重命名、新建和删除"),
 )
 OPTIONAL_GROUPS: tuple[tuple[str, str, str], ...] = (
-    ("cpu", "CPU", "Real-time CPU usage with histogram and popup graph"),
-    ("memory", "Memory", "RAM usage percentage and free memory display"),
-    ("quick_launch", "Quick Launch", "Spotlight-style search for apps, files and more"),
-    ("active_window", "Active Window", "Title and icon of the currently focused window"),
-    ("systray", "Systray", "System tray icons pinned directly to the bar"),
-    ("weather", "Weather", "7-day forecast via Open-Meteo, no API key needed"),
-    ("github", "GitHub", "Unread count with popup grouped by repo and type"),
-    ("microphone", "Microphone", "Mic mute and input level, scroll to adjust volume"),
-    ("media", "Media", "Now playing track with popup playback controls"),
+    ("cpu", "CPU", "实时 CPU 占用，带直方图与弹出图表"),
+    ("memory", "内存", "RAM 占用百分比与可用内存显示"),
+    ("quick_launch", "快速启动", "Spotlight 式搜索，可查找应用、文件等"),
+    ("active_window", "活动窗口", "当前焦点窗口的标题与图标"),
+    ("systray", "系统托盘", "直接固定在状态栏上的系统托盘图标"),
+    ("weather", "天气", "通过 Open-Meteo 获取 7 天预报，无需 API 密钥"),
+    ("github", "GitHub", "未读数量，弹窗按仓库和类型分组"),
+    ("microphone", "麦克风", "麦克风静音与输入电平，滚动调节音量"),
+    ("media", "媒体", "正在播放的曲目，带弹出式播放控制"),
 )
 FEATURE_GROUPS: tuple[tuple[str, str, str], ...] = (*OPTIONAL_GROUPS,)
 

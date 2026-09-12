@@ -124,9 +124,9 @@ class DndWidget(BaseWidget):
             return
 
         if self._current_status == "disabled":
-            tooltip_text = "Do Not Disturb (Off)"
+            tooltip_text = "请勿打扰（关闭）"
         else:
-            tooltip_text = f"Do Not Disturb (On) {self._current_status.title()}"
+            tooltip_text = f"请勿打扰（开启）{self._current_status.title()}"
         set_tooltip(self._widget_container, tooltip_text)
 
         tooltip_filter = getattr(self._widget_container, "_tooltip_filter", None)

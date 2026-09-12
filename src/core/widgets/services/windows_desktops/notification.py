@@ -71,7 +71,7 @@ def _make_sink_class(interfaces: DesktopInterfaces) -> type:
             try:
                 self._dispatch(event)
             except Exception:
-                logger.exception("Virtual desktop notification handler failed for %s", event)
+                logger.exception("虚拟桌面通知处理器处理 %s 时失败", event)
             return 0  # S_OK regardless; never report failure to the shell
 
         def VirtualDesktopCreated(self, *_args: Any) -> int:
@@ -155,7 +155,7 @@ class DesktopNotificationListener:
             )
             self._cookie = self._service.Register(pointer)
         except Exception:
-            logger.warning("Could not register for virtual desktop notifications", exc_info=True)
+            logger.warning("无法注册虚拟桌面通知", exc_info=True)
             self._service = None
             self._sink = None
             self._cookie = None

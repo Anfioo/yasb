@@ -44,13 +44,13 @@ def create() -> tuple[bool, str]:
     executable = _executable()
     if not executable.exists():
         # Running from source. A task pointing at a missing exe fails silently every interval.
-        return False, f"{executable.name} was not found next to the app"
+        return False, f"在应用旁未找到 {executable.name}"
 
     try:
         scheduler = _scheduler()
         task = scheduler.NewTask(0)
 
-        task.RegistrationInfo.Description = "Backs up the YASB configuration when it changes."
+        task.RegistrationInfo.Description = "YASB 配置变更时自动备份。"
         task.RegistrationInfo.Author = "YASB Cloud"
         task.Settings.Compatibility = 6
 

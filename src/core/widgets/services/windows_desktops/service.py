@@ -155,7 +155,7 @@ class WindowsDesktopService(QObject):
         guid = self._current()
         number = next((d.number for d in self._snapshot() if d.guid == guid), 0)
         if not number:
-            raise VirtualDesktopError(f"Current desktop {guid} is not in the desktop list")
+            raise VirtualDesktopError(f"当前桌面 {guid} 不在桌面列表中")
         return number
 
     def _invalidate(self) -> None:
@@ -170,7 +170,7 @@ class WindowsDesktopService(QObject):
             self._invalidate()
             desktop = next((d for d in self._snapshot() if d.number == number), None)
         if desktop is None:
-            raise VirtualDesktopError(f"No desktop at position {number}")
+            raise VirtualDesktopError(f"位置 {number} 没有桌面")
         return desktop
 
     def _on_com_event(self, event: DesktopEvent) -> None:
@@ -238,7 +238,7 @@ class WindowsDesktopService(QObject):
 
         # Fall back to polling only if the shell will not push to us.
         if not self._listener.active and not self._listener.start() and self._timer is None:
-            logger.warning("Falling back to polling for virtual desktop changes")
+            logger.warning("回退到轮询方式检测虚拟桌面变化")
             self._timer = QTimer(self)
             self._timer.setInterval(POLL_INTERVAL_MS)
             self._timer.timeout.connect(self._poll)

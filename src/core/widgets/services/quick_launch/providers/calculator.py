@@ -69,7 +69,7 @@ def _eval(node: ast.AST) -> int | float:
         return _NAMES[node.func.id](*(_eval(a) for a in node.args))
     if isinstance(node, ast.Name) and node.id in _NAMES:
         return _NAMES[node.id]
-    raise ValueError("Unsupported expression")
+    raise ValueError("不支持的表达式")
 
 
 # Must contain at least one digit and one operator or math function

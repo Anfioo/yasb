@@ -89,7 +89,7 @@ class AudioVizCanvas(QFrame):
         except Exception:
             if not self._paint_failed:
                 self._paint_failed = True
-                logging.warning("Audio visualizer paint failed; suppressing further paint errors", exc_info=True)
+                logging.warning("音频可视化绘制失败；后续绘制错误将不再输出", exc_info=True)
 
     def _columns(self, count: int) -> tuple[list[int], list[float]]:
         """Left edge and edge-fade opacity for each column."""

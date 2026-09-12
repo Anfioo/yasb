@@ -26,7 +26,7 @@ def get_saved_token(name: str = "notifications") -> str:
         if path.exists():
             return path.read_text(encoding="utf-8").strip()
     except Exception as e:
-        logging.error("GitHubAuth: Failed to read saved token: %s", e)
+        logging.error("GitHubAuth：读取已保存令牌失败：%s", e)
     return ""
 
 
@@ -36,7 +36,7 @@ def save_token(token: str, name: str = "notifications") -> None:
         _TOKEN_FILES[name].write_text(token, encoding="utf-8")
         logging.info("GitHubAuth token saved successfully.")
     except Exception as e:
-        logging.error("GitHubAuth failed to save token: %s", e)
+        logging.error("GitHubAuth 保存令牌失败：%s", e)
 
 
 def request_device_code(name: str = "notifications") -> dict:
@@ -62,11 +62,11 @@ def request_device_code(name: str = "notifications") -> dict:
             return json.loads(raw)
     except urllib.error.HTTPError as e:
         body = e.read().decode("utf-8", errors="replace")
-        logging.error("GitHubAuth HTTP %s: %s", e.code, body)
-        raise RuntimeError(f"GitHub returned HTTP {e.code}.\nDetails: {body}") from e
+        logging.error("GitHubAuth HTTP %s：%s", e.code, body)
+        raise RuntimeError(f"GitHub 返回 HTTP {e.code}。\n详情：{body}") from e
     except urllib.error.URLError as e:
-        logging.error("GitHubAuth network error: %s", e)
-        raise RuntimeError("Network error.\nCheck your internet connection.") from e
+        logging.error("GitHubAuth 网络错误：%s", e)
+        raise RuntimeError("网络错误。\n请检查你的网络连接。") from e
 
 
 def poll_for_token(
@@ -116,13 +116,13 @@ def poll_for_token(
                 poll_interval += 5
                 continue
             elif error == "expired_token":
-                on_error("Device code expired.\nPlease try again.")
+                on_error("设备码已过期。\n请重试。")
                 return
             elif error == "access_denied":
-                on_error("Authorization was denied.")
+                on_error("授权被拒绝。")
                 return
             elif error:
-                on_error(f"Authorization failed: {error}")
+                on_error(f"授权失败：{error}")
                 return
 
             token = result.get("access_token", "")
@@ -133,9 +133,9 @@ def poll_for_token(
                 return
 
         except urllib.error.URLError:
-            on_error("Network error.\nCheck your internet connection.")
+            on_error("网络错误。\n请检查你的网络连接。")
             return
         except Exception as e:
-            logging.error("GitHubAuth polling error: %s", e)
-            on_error(f"Unexpected error: {e}")
+            logging.error("GitHubAuth 轮询错误：%s", e)
+            on_error(f"意外错误：{e}")
             return

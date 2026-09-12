@@ -695,7 +695,7 @@ class OpenMeteoWidget(BaseWidget):
     def process_weather_data(self, weather_data: dict[str, Any]):
         try:
             if not weather_data:
-                raise Exception("Weather data is empty.")
+                raise Exception("天气数据为空。")
 
             current = weather_data.get("current", {})
             daily = weather_data.get("daily", {})
@@ -703,7 +703,7 @@ class OpenMeteoWidget(BaseWidget):
 
             # Validate required fields
             if not current or not daily or not hourly:
-                raise Exception("Incomplete weather data received.")
+                raise Exception("收到的天气数据不完整。")
 
             # Parse current time from the response
             current_time_str = current.get("time", "")

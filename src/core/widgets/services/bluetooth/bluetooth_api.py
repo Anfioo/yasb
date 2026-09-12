@@ -66,7 +66,7 @@ def get_bluetooth_api() -> Any:
             return ctypes.WinDLL(path)
         except OSError as e:
             last_error = e
-    raise RuntimeError(f"Failed to load BluetoothAPIs.dll. Error: {last_error}")
+    raise RuntimeError(f"加载 BluetoothAPIs.dll 失败。错误：{last_error}")
 
 
 class BluetoothNativeApi:
@@ -179,14 +179,14 @@ async def set_radio_power(on: bool) -> bool:
     try:
         access = await Radio.request_access_async()
         if access != RadioAccessStatus.ALLOWED:
-            logger.warning("Bluetooth radio access denied: %s", access)
+            logger.warning("蓝牙无线电访问被拒绝：%s", access)
             return False
         for radio in await Radio.get_radios_async():
             if radio.kind == RadioKind.BLUETOOTH:
                 target = RadioState.ON if on else RadioState.OFF
                 return await radio.set_state_async(target) == RadioAccessStatus.ALLOWED
     except Exception as e:
-        logger.error("Failed to set Bluetooth radio state: %s", e)
+        logger.error("设置蓝牙无线电状态失败：%s", e)
     return False
 
 
@@ -196,7 +196,7 @@ async def bind_radio(on_changed) -> tuple[Any, Any] | None:
             if radio.kind == RadioKind.BLUETOOTH:
                 return radio, radio.add_state_changed(on_changed)
     except Exception as e:
-        logger.warning("Bluetooth bind_radio failed: %s", e)
+        logger.warning("Bluetooth bind_radio 失败：%s", e)
     return None
 
 
@@ -225,7 +225,7 @@ def open_adapter_watch(on_changed) -> Any | None:
         _ = BluetoothAdapter.get_device_selector()
         watcher = DeviceInformation.create_watcher()
     except Exception as e:
-        logger.warning("Bluetooth open_adapter_watch failed: %s", e)
+        logger.warning("Bluetooth open_adapter_watch 失败：%s", e)
         return None
 
     state = {"ready": False, "watcher": watcher, "tokens": [], "handlers": []}
@@ -274,7 +274,7 @@ def open_adapter_watch(on_changed) -> Any | None:
         ]
         watcher.start()
     except Exception as e:
-        logger.warning("Bluetooth adapter watcher start failed: %s", e)
+        logger.warning("蓝牙适配器监视器启动失败：%s", e)
         return None
     return state
 
@@ -530,7 +530,7 @@ async def list_le_devices() -> list[DeviceInfo] | None:
                 is_le=True,
             )
     except Exception as e:
-        logger.error("LE enumerate failed: %s", e)
+        logger.error("LE 枚举失败：%s", e)
         return None
 
     return list(found.values())

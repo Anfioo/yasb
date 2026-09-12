@@ -131,14 +131,14 @@ class GlazewmClient(QObject):
         self.glazewm_connection_status.emit(state == QAbstractSocket.SocketState.ConnectedState)
 
     def _on_error(self, error: QAbstractSocket.SocketError) -> None:
-        logger.warning("WebSocket error: %s. Reconnecting...", error)
+        logger.warning("WebSocket 错误：%s。正在重新连接……", error)
         self._reconnect_timer.start()
 
     def _handle_message(self, message: str):
         try:
             response = json.loads(message)
         except json.JSONDecodeError:
-            logger.warning("Received invalid JSON data.")
+            logger.warning("收到无效的 JSON 数据。")
             return
 
         if response.get("messageType") == MessageType.EVENT_SUBSCRIPTION:
@@ -148,13 +148,13 @@ class GlazewmClient(QObject):
         elif response.get("messageType") == MessageType.CLIENT_RESPONSE:
             raw_data: Any = response.get("data")
             if not isinstance(raw_data, dict):
-                logger.warning("Expected 'data' to be a dict, got %s", type(raw_data).__name__)
+                logger.warning("期望 'data' 为字典，实际为 %s", type(raw_data).__name__)
                 return
             data = cast(dict[str, Any], raw_data)
             if response.get("clientMessage") == QueryType.MONITORS:
                 monitors = data.get("monitors", [])
                 if monitors is None:
-                    logger.warning("Expected 'monitors' to be a list, got None")
+                    logger.warning("期望 'monitors' 为列表，实际为 None")
                     return
                 self.workspaces_data_processed.emit(self._process_workspaces(monitors))
             elif response.get("clientMessage") == QueryType.TILING_DIRECTION:
@@ -163,7 +163,7 @@ class GlazewmClient(QObject):
             elif response.get("clientMessage") == QueryType.BINDING_MODES:
                 binding_modes = data.get("bindingModes", [])
                 if binding_modes is None:
-                    logger.warning("Expected 'bindingModes' to be a list, got %s", type(binding_modes).__name__)
+                    logger.warning("期望 'bindingModes' 为列表，实际为 %s", type(binding_modes).__name__)
                     return
                 self.binding_mode_changed.emit(self._process_binding_modes(binding_modes))
 
@@ -173,10 +173,10 @@ class GlazewmClient(QObject):
             monitor_name: str | None = mon.get("hardwareId")
             handle: int | None = mon.get("handle")
             if not handle:
-                logger.warning("Monitor handle not found")
+                logger.warning("未找到显示器句柄")
                 continue
             if not monitor_name:
-                monitor_name = f"Unknown_{handle}"
+                monitor_name = f"未知_{handle}"
             workspaces_data = [
                 Workspace(
                     name=child.get("name", ""),

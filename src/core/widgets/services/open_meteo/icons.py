@@ -85,81 +85,81 @@ def get_weather_icon(code: int, is_day: bool) -> tuple[str, str, str]:
     # Clear sky
     if code == 0:
         if is_day:
-            return ICON_MAP["sunnyDay"], "sunnyDay", "Clear sky"
-        return ICON_MAP["clearNight"], "clearNight", "Clear sky"
+            return ICON_MAP["sunnyDay"], "sunnyDay", "晴朗"
+        return ICON_MAP["clearNight"], "clearNight", "晴朗"
 
     # Mainly clear, Partly cloudy, Overcast
     if code in {1, 2, 3}:
         key = f"cloudy{time}"
-        descriptions = {1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast"}
-        return ICON_MAP[key], key, descriptions.get(code, "Cloudy")
+        descriptions = {1: "大致晴朗", 2: "局部多云", 3: "阴天"}
+        return ICON_MAP[key], key, descriptions.get(code, "多云")
 
     # Fog
     if code in {45, 48}:
         key = f"foggy{time}"
-        desc = "Fog" if code == 45 else "Depositing rime fog"
+        desc = "雾" if code == 45 else "雾凇"
         return ICON_MAP[key], key, desc
 
     # Drizzle
     if code in {51, 53, 55, 56, 57}:
         key = f"drizzle{time}"
         descriptions = {
-            51: "Light drizzle",
-            53: "Moderate drizzle",
-            55: "Dense drizzle",
-            56: "Light freezing drizzle",
-            57: "Dense freezing drizzle",
+            51: "小毛毛雨",
+            53: "中毛毛雨",
+            55: "大毛毛雨",
+            56: "小冻毛毛雨",
+            57: "大冻毛毛雨",
         }
-        return ICON_MAP[key], key, descriptions.get(code, "Drizzle")
+        return ICON_MAP[key], key, descriptions.get(code, "毛毛雨")
 
     # Rain
     if code in {61, 63, 65, 66, 67}:
         key = f"rainy{time}"
         descriptions = {
-            61: "Slight rain",
-            63: "Moderate rain",
-            65: "Heavy rain",
-            66: "Light freezing rain",
-            67: "Heavy freezing rain",
+            61: "小雨",
+            63: "中雨",
+            65: "大雨",
+            66: "小冻雨",
+            67: "大冻雨",
         }
-        return ICON_MAP[key], key, descriptions.get(code, "Rain")
+        return ICON_MAP[key], key, descriptions.get(code, "雨")
 
     # Snow
     if code in {71, 73, 75, 77}:
         key = f"snowy{time}"
         descriptions = {
-            71: "Slight snow fall",
-            73: "Moderate snow fall",
-            75: "Heavy snow fall",
-            77: "Snow grains",
+            71: "小雪",
+            73: "中雪",
+            75: "大雪",
+            77: "米雪",
         }
-        return ICON_MAP[key], key, descriptions.get(code, "Snow")
+        return ICON_MAP[key], key, descriptions.get(code, "雪")
 
     # Rain showers
     if code in {80, 81, 82}:
         key = f"rainy{time}"
         descriptions = {
-            80: "Slight rain showers",
-            81: "Moderate rain showers",
-            82: "Violent rain showers",
+            80: "小阵雨",
+            81: "中阵雨",
+            82: "大阵雨",
         }
-        return ICON_MAP[key], key, descriptions.get(code, "Rain showers")
+        return ICON_MAP[key], key, descriptions.get(code, "阵雨")
 
     # Snow showers
     if code in {85, 86}:
         key = f"snowy{time}"
-        desc = "Slight snow showers" if code == 85 else "Heavy snow showers"
+        desc = "小阵雪" if code == 85 else "大阵雪"
         return ICON_MAP[key], key, desc
 
     # Thunderstorm
     if code in {95, 96, 99}:
         key = f"thunderstorm{time}"
         descriptions = {
-            95: "Thunderstorm",
-            96: "Thunderstorm with slight hail",
-            99: "Thunderstorm with heavy hail",
+            95: "雷暴",
+            96: "雷暴伴小冰雹",
+            99: "雷暴伴大冰雹",
         }
-        return ICON_MAP[key], key, descriptions.get(code, "Thunderstorm")
+        return ICON_MAP[key], key, descriptions.get(code, "雷暴")
 
     # Default fallback
-    return ICON_MAP["default"], "default", "Unknown"
+    return ICON_MAP["default"], "default", "未知"

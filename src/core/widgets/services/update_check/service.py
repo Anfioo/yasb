@@ -33,7 +33,7 @@ class _UpdateWorker(QThread):
         try:
             module = _SOURCE_MODULES.get(self.source)
             if module is None:
-                logging.error("Unknown update source: %s", self.source)
+                logging.error("未知的更新源：%s", self.source)
                 self.finished.emit(self.source, {"count": 0, "names": [], "ids": []})
                 return
 
@@ -73,7 +73,7 @@ class _UpdateWorker(QThread):
             )
 
         except Exception as e:
-            logging.error("Error in %s update worker: %s", self.source, e)
+            logging.error("%s 更新工作线程出错：%s", self.source, e)
             self.finished.emit(self.source, {"count": 0, "names": [], "ids": []})
 
 
@@ -192,7 +192,7 @@ class UpdateCheckService(QObject):
             if widget in self._widgets:
                 self._widgets.remove(widget)
         except Exception:
-            logging.exception("Error pushing %s update to widget", source)
+            logging.exception("推送 %s 更新到组件时出错", source)
 
     def handle_left_click(self, source: str):
         """Upgrade packages for the given source."""

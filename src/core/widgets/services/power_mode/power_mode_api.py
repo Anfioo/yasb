@@ -14,9 +14,9 @@ _BEST_EFFICIENCY = GUID.from_buffer_copy(uuid.UUID("961cc777-2547-4f9d-8174-7d86
 _BEST_PERFORMANCE = GUID.from_buffer_copy(uuid.UUID("ded574b5-45a0-4f42-8737-46345c09c238").bytes_le)
 
 _MODES: list[tuple[str, GUID]] = [
-    ("Best power efficiency", _BEST_EFFICIENCY),
-    ("Balanced", _BALANCED),
-    ("Best performance", _BEST_PERFORMANCE),
+    ("最佳能效", _BEST_EFFICIENCY),
+    ("平衡", _BALANCED),
+    ("最佳性能", _BEST_PERFORMANCE),
 ]
 
 

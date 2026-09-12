@@ -153,9 +153,9 @@ class WiFiWorker(QThread):
                 if not self._stop_event.is_set():
                     self.result.emit(WiFiInfo(bars, name, exact_quality))
             except Exception as e:
-                logger.error("WiFiWorker error: %s", e)
+                logger.error("WiFiWorker 错误：%s", e)
                 if not self._stop_event.is_set():
-                    self.result.emit(WiFiInfo(0, "Error", -1))
+                    self.result.emit(WiFiInfo(0, "错误", -1))
             self._stop_event.wait(self._poll_interval / 1000)
 
     def _get_wifi_strength(self) -> int:
@@ -176,7 +176,7 @@ class WiFiWorker(QThread):
         for connection in connections:
             if connection.get_network_connectivity_level() == NetworkConnectivityLevel.INTERNET_ACCESS:
                 return connection.profile_name
-        return "Disconnected"
+        return "已断开"
 
     def _get_exact_quality(self) -> int:
         """Get exact WiFi quality via WLAN API. Returns -1 if unavailable."""
@@ -217,7 +217,7 @@ class WiFiConnectWorker(QThread):
         """Connect to the WiFi network"""
         adapters = WiFiAdapter.find_all_adapters_async().get()
         if not adapters:
-            raise RuntimeError("No WiFi adapter found.")
+            raise RuntimeError("未找到 WiFi 适配器。")
         adapter = adapters[0]
         report: WiFiNetworkReport = adapter.network_report
         reconnection_kind = (
@@ -241,7 +241,7 @@ class WiFiConnectWorker(QThread):
                 else:
                     result = adapter.connect_async(network, reconnect_kind).get()
                 return result.connection_status
-        raise RuntimeError("Selected network not found after scan.")
+        raise RuntimeError("扫描后未找到所选网络。")
 
     def _connect_hidden(
         self, adapter: WiFiAdapter, report: WiFiNetworkReport, reconnect_kind: WiFiReconnectionKind
@@ -253,7 +253,7 @@ class WiFiConnectWorker(QThread):
                 hidden_network = network
                 break
         else:
-            raise RuntimeError("No hidden network found after scan.")
+            raise RuntimeError("扫描后未找到隐藏网络。")
         cred = PasswordCredential()
         cred.password = self.password
         # Use the connect_with_password_credential_and_ssid_async method
@@ -274,7 +274,7 @@ class WifiDisconnectWorker(QThread):
     def run(self):
         adapters = WiFiAdapter.find_all_adapters_async().get()
         if not adapters:
-            raise RuntimeError("No WiFi adapter found.")
+            raise RuntimeError("未找到 WiFi 适配器。")
         adapter = adapters[0]
         adapter.disconnect()
 
@@ -353,7 +353,7 @@ class WiFiManager(QObject):
             result = WlanScan(self._client_handle, byref(interface.InterfaceGuid), None, None, None)
             if result != ERROR_SUCCESS:
                 self._is_scanning = False
-                logger.error("Error scanning for WiFi networks: %s", format_error_message(result))
+                logger.error("扫描 WiFi 网络时出错：%s", format_error_message(result))
                 if result == ACCESS_DENIED:
                     self.wifi_scan_completed.emit(ScanResultStatus.ACCESS_DENIED, [])
                 elif result == ERROR_NDIS_DOT11_POWER_STATE_INVALID:
@@ -428,7 +428,7 @@ class WiFiManager(QObject):
                 byref(network_list_ptr),
             )
             if result != ERROR_SUCCESS:
-                logger.error("Error getting available networks: %s", result)
+                logger.error("获取可用网络列表时出错：%s", result)
                 continue
             network_list = network_list_ptr.contents
             networks = (WLAN_AVAILABLE_NETWORK * int(network_list.dwNumberOfItems)).from_address(
@@ -443,7 +443,7 @@ class WiFiManager(QObject):
                     ssid_str = ssid_bytes.decode("latin-1", errors="replace")
 
                 if not ssid_str.strip():
-                    ssid_str = "<Hidden Network>"
+                    ssid_str = "<隐藏网络>"
 
                 # Check if we already have this SSID with better signal quality
                 duplicate = False

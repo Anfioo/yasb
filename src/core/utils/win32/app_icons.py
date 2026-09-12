@@ -174,7 +174,7 @@ def get_window_icon(hwnd: int):
 
         return None
     except Exception as e:
-        logging.error("Error fetching icon: %s", e)
+        logging.error("获取图标时出错：%s", e)
         return None
 
 
@@ -281,7 +281,7 @@ def hicon_to_image(hicon: int) -> Image.Image | None:
     # Get icon info
     icon_info = ICONINFO()
     if not GetIconInfo(hicon, byref(icon_info)):
-        logging.error("GetIconInfo failed: %s", hicon)
+        logging.error("GetIconInfo 失败：%s", hicon)
         return None
 
     # Get bitmap info
@@ -291,7 +291,7 @@ def hicon_to_image(hicon: int) -> Image.Image | None:
     if result == 0:
         DeleteObject(icon_info.hbmMask)
         DeleteObject(icon_info.hbmColor)
-        logging.error("GetObjectW failed")
+        logging.error("GetObjectW 失败")
         return None
 
     width, height = bitmap.bmWidth, bitmap.bmHeight
@@ -305,7 +305,7 @@ def hicon_to_image(hicon: int) -> Image.Image | None:
     if hdc == 0:
         DeleteObject(icon_info.hbmMask)
         DeleteObject(icon_info.hbmColor)
-        logging.error("GetDC failed")
+        logging.error("GetDC 失败")
         return None
 
     # Create bitmap info
@@ -344,7 +344,7 @@ def hicon_to_image(hicon: int) -> Image.Image | None:
     DeleteObject(icon_info.hbmMask)
 
     if color_result == 0 or mask_result == 0:
-        logging.error("GetDIBits failed")
+        logging.error("GetDIBits 失败")
         return None
 
     # Convert buffer to bytes
@@ -412,5 +412,5 @@ def get_stock_icon(icon_id: int) -> Image.Image | None:
                 pass
 
     except Exception as e:
-        logging.error("Error getting stock icon %s: %s", icon_id, e)
+        logging.error("获取系统图标 %s 时出错：%s", icon_id, e)
         return None

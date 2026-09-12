@@ -232,7 +232,7 @@ class WeatherWidget(BaseWidget):
                 combined_data = self._hourly_data_3
                 current_time = None
             else:
-                raise ValueError(f"Invalid day index: {day_idx}")
+                raise ValueError(f"无效的日期索引：{day_idx}")
             parsed_data: list[HourlyData] = []
             for h in combined_data:
                 temp = h["temp_c"] if self.config.units == "metric" else h["temp_f"]
@@ -455,7 +455,7 @@ class WeatherWidget(BaseWidget):
     def process_weather_data(self, weather_data: dict[str, Any]):
         try:
             if not weather_data:
-                raise Exception("Weather data is empty.")
+                raise Exception("天气数据为空。")
 
             # Validate the raw API response through Pydantic.
             data = WeatherApiResponse.model_validate(weather_data)
@@ -465,7 +465,7 @@ class WeatherWidget(BaseWidget):
             alerts = data.alerts
 
             if len(data.forecast.forecastday) < 3:
-                raise Exception(f"Expected 3 forecast days, got {len(data.forecast.forecastday)}.")
+                raise Exception(f"预期 3 天预报，实际收到 {len(data.forecast.forecastday)} 天。")
 
             fc_today = data.forecast.forecastday[0]
             fc_day1 = data.forecast.forecastday[1]

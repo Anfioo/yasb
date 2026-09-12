@@ -41,28 +41,28 @@ def get_relative_time(iso_timestamp: str, short: bool = False) -> str:
         years = days / 365
 
         if seconds < 60:
-            return "now" if short else "just now"
+            return "现在" if short else "刚刚"
         elif minutes < 60:
             m = int(minutes)
-            return f"{m}m" if short else f"{m} minute{'s' if m != 1 else ''} ago"
+            return f"{m}分" if short else f"{m} 分钟前"
         elif hours < 24:
             h = int(hours)
-            return f"{h}h" if short else f"{h} hour{'s' if h != 1 else ''} ago"
+            return f"{h}时" if short else f"{h} 小时前"
         elif days < 7:
             d = int(days)
-            return f"{d}d" if short else f"{d} day{'s' if d != 1 else ''} ago"
+            return f"{d}天" if short else f"{d} 天前"
         elif short:
             if days < 365:
                 return updated.strftime("%-d %b") if os.name != "nt" else updated.strftime("%#d %b")
             return updated.strftime("%b %Y")
         elif weeks < 4:
             w = int(weeks)
-            return f"{w} week{'s' if w != 1 else ''} ago"
+            return f"{w} 周前"
         elif months < 12:
             mo = int(months)
-            return f"{mo} month{'s' if mo != 1 else ''} ago"
+            return f"{mo} 个月前"
         else:
             y = int(years)
-            return f"{y} year{'s' if y != 1 else ''} ago"
+            return f"{y} 年前"
     except Exception:
         return ""

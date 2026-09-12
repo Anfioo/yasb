@@ -130,12 +130,12 @@ def parse_hotkey(hotkey: str) -> tuple[int, int] | None:
             modifiers |= MOD_SHIFT
         else:
             if key_name is not None:
-                logging.warning("Invalid hotkey '%s': multiple non-modifier keys", hotkey)
+                logging.warning("无效的快捷键 '%s'：包含多个非修饰键", hotkey)
                 return None
             key_name = part
 
     if key_name is None:
-        logging.warning("Invalid hotkey '%s': no key specified", hotkey)
+        logging.warning("无效的快捷键 '%s'：未指定按键", hotkey)
         return None
 
     # Resolve virtual key code
@@ -154,7 +154,7 @@ def parse_hotkey(hotkey: str) -> tuple[int, int] | None:
                 vk = 0x70 + (fn - 1)  # VK_F1 = 0x70
 
     if vk is None:
-        logging.warning("Invalid hotkey '%s': unknown key '%s'", hotkey, key_name)
+        logging.warning("无效的快捷键 '%s'：未知按键 '%s'", hotkey, key_name)
         return None
 
     return modifiers, vk
@@ -199,7 +199,7 @@ class HotkeyListener(QThread):
                 logging.debug("Registered hotkey %s", binding.hotkey)
             else:
                 logging.warning(
-                    "Failed to register hotkey %s - it may be in use by another application.",
+                    "注册快捷键 %s 失败——它可能已被其他程序占用。",
                     binding.hotkey,
                 )
 
@@ -251,7 +251,7 @@ class HotkeyListener(QThread):
         while True:
             result = user32.GetMessageW(byref(msg), None, 0, 0)
             if result == -1:
-                logging.error("GetMessageW failed in hotkey listener")
+                logging.error("快捷键监听器中的 GetMessageW 失败")
                 break
             if result == 0:
                 break
@@ -262,7 +262,7 @@ class HotkeyListener(QThread):
                     try:
                         self._emit_binding(binding)
                     except Exception:
-                        logging.exception("Hotkey dispatch failed")
+                        logging.exception("快捷键派发失败")
 
         self._unregister_hotkeys()
 
@@ -282,7 +282,7 @@ def collect_widget_keybindings(widget_name: str, keybindings: list[dict]) -> lis
         action = kb.get("action", "")
 
         if not keys or not action:
-            logging.warning("Invalid keybinding for %s: missing 'keys' or 'action'", widget_name)
+            logging.warning("为 %s 配置的按键绑定无效：缺少 'keys' 或 'action'", widget_name)
             continue
 
         parsed = parse_hotkey(keys)

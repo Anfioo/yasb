@@ -177,8 +177,8 @@ class BrightnessService(QObject):
             monitor = self._monitors.get(hmonitor)
             conn = monitor.connection_type if monitor else ""
         if conn:
-            return f"Monitor {index + 1} · {conn}"
-        return f"Monitor {index + 1}"
+            return f"显示器 {index + 1} · {conn}"
+        return f"显示器 {index + 1}"
 
     def refresh_now(self, hmonitor: int | None = None) -> None:
         """Refresh DDC monitors in the background. Scheme uses POLICY cache."""
@@ -238,7 +238,7 @@ class BrightnessService(QObject):
         clean = name.strip()
         if clean and not clean.isdigit():
             return clean
-        return f"Monitor {index + 1}"
+        return f"显示器 {index + 1}"
 
     def _drain_writes(self) -> None:
         """Apply latest slider values (keeps only the newest per monitor)."""
@@ -439,11 +439,11 @@ class BrightnessService(QObject):
             if target.monitor_name:
                 name = target.monitor_name
             elif target.is_internal:
-                name = "Built-in display"
+                name = "内置显示器"
             else:
                 name = self._get_monitor_name(hmon, index)
-            if target.is_internal and name.startswith("Monitor "):
-                name = "Built-in display"
+            if target.is_internal and name.startswith("显示器 "):
+                name = "内置显示器"
             with self._lock:
                 monitor = self._monitors.get(hmon)
                 if not monitor:
@@ -514,7 +514,7 @@ class BrightnessService(QObject):
             hmon = int(hmonitor)
             info = _MonitorInfo(hmon)
             info.device = get_monitor_info(hmon).get("device", "")
-            info.name = f"Monitor {index[0] + 1}"
+            info.name = f"显示器 {index[0] + 1}"
             index[0] += 1
             with self._lock:
                 self._monitors[hmon] = info
@@ -527,14 +527,14 @@ class BrightnessService(QObject):
         try:
             opened = self._open_physical(hmonitor)
             if opened is None:
-                return f"Monitor {index + 1}"
+                return f"显示器 {index + 1}"
             monitors, count = opened
             try:
                 return self._normalize_monitor_name(monitors[0].szPhysicalMonitorDescription or "", index)
             finally:
                 self._destroy_physical_monitors(monitors, count)
         except Exception:
-            return f"Monitor {index + 1}"
+            return f"显示器 {index + 1}"
 
     def _read_brightness(self, hmonitor: int) -> int | None:
         """Read brightness for an already-classified monitor. Detection owns classification."""

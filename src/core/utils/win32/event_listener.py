@@ -31,7 +31,7 @@ class SystemEventListener(QThread):
             try:
                 self._event_service.emit_event(event_type, hwnd, event_type)
             except Exception:
-                logging.exception("Failed to emit event %s for %s", event_type, hwnd)
+                logging.exception("为 %s 发出事件 %s 失败", event_type, hwnd)
 
     def _hook_range(self, event_min: int, event_max: int) -> int:
         return user32.SetWinEventHook(
@@ -73,7 +73,7 @@ class SystemEventListener(QThread):
             self._hooks = self._build_event_hooks()
 
             if not self._hooks:
-                logging.warning("SetWinEventHook failed. Retrying indefinitely...")
+                logging.warning("SetWinEventHook 失败，正在无限重试…")
 
             while not self._hooks:
                 time.sleep(1)

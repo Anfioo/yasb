@@ -40,7 +40,7 @@ class ClockIcons(RootModel[dict[str, str]]):
     def model_post_init(self, __context: Any):
         for key in self.root:
             if not re.match(r"^clock_\d{2}$", key):
-                raise ValueError(f"Invalid icon key '{key}'. Must match 'clock_XX' where XX is two digits.")
+                raise ValueError(f"无效的图标键名 '{key}'。必须匹配 'clock_XX' 格式，其中 XX 为两位数字。")
 
 
 class ClockCallbacksConfig(CallbacksConfig):

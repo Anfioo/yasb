@@ -20,7 +20,7 @@ class _WeatherBase(BaseModel):
 
 
 class Condition(_WeatherBase):
-    text: str = "Unknown"
+    text: str = "未知"
     icon: str = ""
     code: int = 0
 
@@ -53,7 +53,7 @@ class Current(_WeatherBase):
 
 
 class Location(_WeatherBase):
-    name: str = "Unknown"
+    name: str = "未知"
     region: str = ""
     country: str = ""
     tz_id: str = ""

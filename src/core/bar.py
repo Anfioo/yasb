@@ -105,7 +105,7 @@ class Bar(QWidget):
             self._os_theme_manager = OsThemeManager(self._bar_frame, self)
             self._os_theme_manager.update_theme_class()
         except Exception as e:
-            logging.error("Failed to initialize theme manager: %s", e)
+            logging.error("初始化主题管理器失败：%s", e)
             self._os_theme_manager = None
 
         self._hide_on_fullscreen = self._window_flags["hide_on_fullscreen"] and self._window_flags["always_on_top"]

@@ -42,7 +42,7 @@ def get_config_dir() -> str:
         makedirs(HOME_CONFIGURATION_DIR)
         return HOME_CONFIGURATION_DIR
     except OSError:
-        logging.error("Failed to create configuration directory at %s.", HOME_CONFIGURATION_DIR)
+        logging.error("在 %s 创建配置目录失败。", HOME_CONFIGURATION_DIR)
         return HOME_CONFIGURATION_DIR
 
 
@@ -97,7 +97,7 @@ def get_config(show_error_dialog: bool = False) -> YasbConfig | None:
         except ValidationError as e:
             validation_errors = format_pydantic_errors_to_yaml(e)
             logging.error(
-                "The config file '%s' contains validation errors. Please fix:\n%s",
+                "配置文件 '%s' 包含验证错误，请修复：\n%s",
                 config_path,
                 validation_errors,
             )
@@ -110,11 +110,11 @@ def get_config(show_error_dialog: bool = False) -> YasbConfig | None:
                 )
             return None
     except ParserError as e:
-        logging.error("The file '%s' contains Parser Error(s). Please fix:\n%s", config_path, e)
+        logging.error("文件 '%s' 包含解析错误，请修复：\n%s", config_path, e)
     except FileNotFoundError:
-        logging.error("The file '%s' could not be found. Does it exist?", config_path)
+        logging.error("找不到文件 '%s'，它是否存在？", config_path)
     except OSError:
-        logging.error("The file '%s' could not be read. Do you have read/write permissions?", config_path)
+        logging.error("无法读取文件 '%s'，你是否拥有读写权限？", config_path)
 
 
 def get_stylesheet(show_error_dialog: bool = False) -> str | None:
@@ -125,7 +125,7 @@ def get_stylesheet(show_error_dialog: bool = False) -> str | None:
         return css_content
 
     except SyntaxErr as e:
-        logging.error("The file '%s' contains Syntax Error(s). Please fix:\n%s", styles_path, e)
+        logging.error("文件 '%s' 包含语法错误，请修复：\n%s", styles_path, e)
         if show_error_dialog:
             raise_info_alert(
                 title="无法加载最近更新的样式表文件。",
@@ -134,9 +134,9 @@ def get_stylesheet(show_error_dialog: bool = False) -> str | None:
                 additional_details=str(e),
             )
     except FileNotFoundError:
-        logging.error("The file '%s' could not be found. Does it exist?", styles_path)
+        logging.error("找不到文件 '%s'，它是否存在？", styles_path)
     except OSError:
-        logging.error("The file '%s' could not be read. Do you have read/write permissions?", styles_path)
+        logging.error("无法读取文件 '%s'，你是否拥有读写权限？", styles_path)
     return None
 
 

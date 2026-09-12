@@ -228,15 +228,15 @@ class _WasapiLoopbackClient:
         tag = int(fmt.wFormatTag)
         if tag == WAVE_FORMAT_EXTENSIBLE:
             if int(fmt.cbSize) < _WFX_EXTENSIBLE_CBSIZE:
-                raise UnsupportedFormatError(f"WAVE_FORMAT_EXTENSIBLE with truncated cbSize {int(fmt.cbSize)}")
+                raise UnsupportedFormatError(f"WAVE_FORMAT_EXTENSIBLE 的 cbSize 被截断（{int(fmt.cbSize)}）")
             subtype = cast(wfx, POINTER(_WAVEFORMATEXTENSIBLE)).contents.SubFormat
             is_float = subtype == KSDATAFORMAT_SUBTYPE_IEEE_FLOAT
             if not is_float and subtype != KSDATAFORMAT_SUBTYPE_PCM:
-                raise UnsupportedFormatError(f"unsupported loopback subformat {subtype}")
+                raise UnsupportedFormatError(f"不支持的回采子格式 {subtype}")
         else:
             is_float = tag == WAVE_FORMAT_IEEE_FLOAT
             if not is_float and tag != WAVE_FORMAT_PCM:
-                raise UnsupportedFormatError(f"unsupported loopback format tag 0x{tag:04X}")
+                raise UnsupportedFormatError(f"不支持的回采格式标签 0x{tag:04X}")
 
         bytes_per_sample = self.frame_bytes // self.channels
         if is_float and bytes_per_sample == 4:
@@ -247,7 +247,7 @@ class _WasapiLoopbackClient:
             self.sample_code, self.sample_scale = "i", 1.0 / 2147483648.0
         else:
             raise UnsupportedFormatError(
-                f"cannot decode {self.bits}-bit {'float' if is_float else 'PCM'} ({bytes_per_sample} bytes per sample)"
+                f"无法解码 {self.bits} 位 {'float' if is_float else 'PCM'}（每采样 {bytes_per_sample} 字节）"
             )
 
     def close(self) -> None:
@@ -534,7 +534,7 @@ class AudioVisualizerCaptureService(QObject):
         if thread is not None and thread.is_alive() and threading.current_thread() is not thread:
             thread.join(timeout=2.0)
             if thread.is_alive():
-                logging.warning("Audio visualizer: capture thread did not exit in time")
+                logging.warning("音频可视化：采集线程未能及时退出")
 
         self._unregister_device_watcher()
         with self._lock:
@@ -552,7 +552,7 @@ class AudioVisualizerCaptureService(QObject):
         except Exception:
             self._watcher = None
             self._enumerator = None
-            logging.warning("Audio visualizer: device change notifications unavailable", exc_info=True)
+            logging.warning("音频可视化：设备变更通知不可用", exc_info=True)
 
     def _unregister_device_watcher(self) -> None:
         watcher, self._watcher = self._watcher, None
@@ -567,12 +567,12 @@ class AudioVisualizerCaptureService(QObject):
     def _capture_thread(self) -> None:
         hr = ole32.CoInitializeEx(None, COINIT_MULTITHREADED)
         if hr < 0 and hr != RPC_E_CHANGED_MODE:
-            logging.error("Audio visualizer: CoInitializeEx failed (0x%08X)", hr & 0xFFFFFFFF)
+            logging.error("音频可视化：CoInitializeEx 失败 (0x%08X)", hr & 0xFFFFFFFF)
             return
         try:
             self._capture_loop()
         except Exception:
-            logging.exception("Audio visualizer: capture thread crashed")
+            logging.exception("音频可视化：采集线程崩溃")
         finally:
             self._mark_stopped()
             if hr >= 0:
@@ -636,7 +636,7 @@ class AudioVisualizerCaptureService(QObject):
                     try:
                         client.resume()
                     except Exception:
-                        logging.warning("Audio visualizer: resume failed, reopening", exc_info=True)
+                        logging.warning("音频可视化：恢复失败，正在重新打开", exc_info=True)
                         client = self._close(client)
                         continue
                     self._last_audio_ns = time.monotonic_ns()
@@ -667,7 +667,7 @@ class AudioVisualizerCaptureService(QObject):
                         backoff_ms = min(backoff_ms * 2, _REOPEN_BACKOFF_MAX_MS)
                         continue
                     except Exception:
-                        logging.warning("Audio visualizer: loopback stream failed, reopening", exc_info=True)
+                        logging.warning("音频可视化：回采流失败，正在重新打开", exc_info=True)
                         client = self._close(client)
                         self._mark_stopped()
                         # Back off like a failed open, so a packet that keeps
@@ -708,7 +708,7 @@ class AudioVisualizerCaptureService(QObject):
         try:
             client = _WasapiLoopbackClient(int(self._audio_event))
         except UnsupportedFormatError as exc:
-            logging.error("Audio visualizer: %s", exc)
+            logging.error("音频可视化：%s", exc)
             with self._lock:
                 self._format_rejected = True
             return None

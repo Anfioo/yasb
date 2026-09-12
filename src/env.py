@@ -17,7 +17,7 @@ def load_env():
     env_path = get_env_path()
     if os.path.isfile(env_path):
         if not load_dotenv(env_path):
-            logging.warning("Failed to load environment variables from %s", env_path)
+            logging.warning("从 %s 加载环境变量失败", env_path)
         else:
             logging.info("Loaded environment variables from %s", env_path)
 
@@ -29,6 +29,6 @@ def set_font_engine():
     valid_engines = {"native", "freetype", "gdi"}
     font_engine = os.getenv("YASB_FONT_ENGINE", "gdi").lower()
     if font_engine not in valid_engines:
-        logging.warning("Unknown font engine '%s', falling back to 'gdi'", font_engine)
+        logging.warning("未知的字体引擎 '%s'，回退到 'gdi'", font_engine)
         font_engine = "gdi"
     os.environ["QT_QPA_PLATFORM"] = f"windows:fontengine={font_engine}"

@@ -48,16 +48,16 @@ logger = logging.getLogger("deprecation")
 
 # Global - removed from any model that doesn't recognize it
 DEPRECATED_FIELDS: dict[str, str] = {
-    "container_padding": "Use CSS padding instead.",
-    "label_shadow": "Use CSS text-shadow instead.",
-    "container_shadow": "Use CSS box-shadow instead.",
-    "btn_shadow": "Use CSS box-shadow instead.",
-    "app_title_shadow": "Use CSS text-shadow instead.",
-    "app_icon_shadow": "Use CSS box-shadow instead.",
-    "unpinned_shadow": "Use CSS box-shadow instead.",
-    "pinned_shadow": "Use CSS box-shadow instead.",
-    "unpinned_vis_btn_shadow": "Use CSS box-shadow instead.",
-    "animation": "Use CSS animations instead.",
+    "container_padding": "请改用 CSS padding。",
+    "label_shadow": "请改用 CSS text-shadow。",
+    "container_shadow": "请改用 CSS box-shadow。",
+    "btn_shadow": "请改用 CSS box-shadow。",
+    "app_title_shadow": "请改用 CSS text-shadow。",
+    "app_icon_shadow": "请改用 CSS box-shadow。",
+    "unpinned_shadow": "请改用 CSS box-shadow。",
+    "pinned_shadow": "请改用 CSS box-shadow。",
+    "unpinned_vis_btn_shadow": "请改用 CSS box-shadow。",
+    "animation": "请改用 CSS 动画。",
 }
 
 RENAMED_FIELDS: dict[str, tuple[str, str]] = {}
@@ -65,84 +65,84 @@ RENAMED_FIELDS: dict[str, tuple[str, str]] = {}
 # Scoped - keyed by class name (for runtime)
 SCOPED_DEPRECATED_FIELDS: dict[str, dict[str, str]] = {
     "BarBlurEffect": {
-        "acrylic": "No longer supported and can be removed from the config.",
+        "acrylic": "不再受支持，可从配置中移除。",
     },
     "BarAlignment": {
-        "center": "Use 'align' instead.",
+        "center": "请改用 'align'。",
     },
     "VSCodeMenuConfig": {
-        "distance": "Use 'offset_top' instead.",
+        "distance": "请改用 'offset_top'。",
     },
     "VSCodeConfig": {
-        "max_field_size": "No longer supported and can be removed from the config. Handled dynamically by font-aware elision.",
-        "folder_icon": "Use icons.folder instead.",
-        "file_icon": "Use icons.file instead.",
-        "hide_folder_icon": "No longer supported. Set icons.folder to an empty string instead.",
-        "hide_file_icon": "No longer supported. Set icons.file to an empty string instead.",
+        "max_field_size": "不再受支持，可从配置中移除。已由字体感知的省略逻辑自动处理。",
+        "folder_icon": "请改用 icons.folder。",
+        "file_icon": "请改用 icons.file。",
+        "hide_folder_icon": "不再受支持。请改为将 icons.folder 设为空字符串。",
+        "hide_file_icon": "不再受支持。请改为将 icons.file 设为空字符串。",
     },
     "BrightnessMenuConfig": {
-        "distance": "Use 'offset_top' instead.",
+        "distance": "请改用 'offset_top'。",
     },
     "ClockCalendarConfig": {
-        "distance": "Use 'offset_top' instead.",
+        "distance": "请改用 'offset_top'。",
     },
     "GroupLabelConfig": {
-        "distance": "Use 'offset_top' instead.",
+        "distance": "请改用 'offset_top'。",
     },
     "ServerMonitorMenuConfig": {
-        "distance": "Use 'offset_top' instead.",
+        "distance": "请改用 'offset_top'。",
     },
     "NotesMenuConfig": {
-        "max_title_size": "No longer supported and can be removed from the config. Handled by font-aware elision.",
+        "max_title_size": "不再受支持，可从配置中移除。已由字体感知的省略逻辑自动处理。",
     },
     "AudioMenuConfig": {
-        "distance": "Use 'offset_top' instead.",
+        "distance": "请改用 'offset_top'。",
     },
     "WeatherCardConfig": {
-        "distance": "Use 'offset_top' instead.",
+        "distance": "请改用 'offset_top'。",
     },
     "HomeConfig": {
-        "distance": "Use 'offset_top' instead.",
+        "distance": "请改用 'offset_top'。",
     },
     "GlazewmWorkspacesConfig": {
-        "hide_empty_workspaces": "No longer supported and can be removed from the config.",
+        "hide_empty_workspaces": "不再受支持，可从配置中移除。",
     },
     "BrightnessConfig": {
-        "hide_unsupported": "No longer supported and can be removed from the config.",
+        "hide_unsupported": "不再受支持，可从配置中移除。",
     },
     "YasbConfig": {
-        "env_file": "No longer supported. Place a .env file in the config folder instead.",
+        "env_file": "不再受支持。请改为在配置文件夹中放置一个 .env 文件。",
     },
     "GalleryConfig": {
-        "lazy_load_delay": "No longer supported and can be removed from the config.",
-        "enable_cache": "No longer supported and can be removed from the config.",
-        "lazy_load": "No longer supported and can be removed from the config.",
-        "lazy_load_fadein": "No longer supported and can be removed from the config.",
-        "enabled": "No longer supported and can be removed from the config.",
-        "blur": "No longer supported and can be removed from the config.",
-        "image_per_page": "No longer supported and can be removed from the config.",
-        "gallery_columns": "No longer supported and can be removed from the config.",
-        "show_buttons": "No longer supported and can be removed from the config.",
-        "image_spacing": "No longer supported and can be removed from the config.",
-        "respect_work_area": "No longer supported and can be removed from the config.",
-        "horizontal_position": "No longer supported and can be removed from the config.",
-        "vertical_position": "No longer supported and can be removed from the config.",
-        "position_offset": "No longer supported and can be removed from the config.",
+        "lazy_load_delay": "不再受支持，可从配置中移除。",
+        "enable_cache": "不再受支持，可从配置中移除。",
+        "lazy_load": "不再受支持，可从配置中移除。",
+        "lazy_load_fadein": "不再受支持，可从配置中移除。",
+        "enabled": "不再受支持，可从配置中移除。",
+        "blur": "不再受支持，可从配置中移除。",
+        "image_per_page": "不再受支持，可从配置中移除。",
+        "gallery_columns": "不再受支持，可从配置中移除。",
+        "show_buttons": "不再受支持，可从配置中移除。",
+        "image_spacing": "不再受支持，可从配置中移除。",
+        "respect_work_area": "不再受支持，可从配置中移除。",
+        "horizontal_position": "不再受支持，可从配置中移除。",
+        "vertical_position": "不再受支持，可从配置中移除。",
+        "position_offset": "不再受支持，可从配置中移除。",
     },
     "AnimationConfig": {
-        "type": "Animation type is no longer supported in TaskbarWidget, remove it from your config.",
+        "type": "TaskbarWidget 不再支持动画类型，请从配置中移除。",
     },
     "PowerPlanConfig": {
-        "update_interval": "Power plan changes are now detected via Windows events. Remove 'update_interval' from your config.",
+        "update_interval": "电源计划变更现已通过 Windows 事件检测，请从配置中移除 'update_interval'。",
     },
 }
 
 SCOPED_RENAMED_FIELDS: dict[str, dict[str, tuple[str, str]]] = {
     "ActiveLayoutIconsConfig": {
-        "maximised": ("maximized", "Use 'maximized' instead."),
+        "maximised": ("maximized", "请改用 'maximized'。"),
     },
     "VolumeConfig": {
-        "volume_icons": ("icons", "Use 'icons' with the dictionary format instead."),
+        "volume_icons": ("icons", "请改用字典格式的 'icons'。"),
     },
 }
 

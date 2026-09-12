@@ -152,7 +152,7 @@ class DndService:
     def set_status(cls, mode: str) -> None:
         """Write UserSelectedProfile. mode: 'disabled', 'priority', or 'alarms'."""
         if mode not in cls.MODES:
-            raise ValueError(f"Invalid DND mode '{mode}'. Use: {list(cls.MODES.keys())}")
+            raise ValueError(f"无效的勿扰模式 '{mode}'。可用模式：{list(cls.MODES.keys())}")
         profile = cls.MODES[mode]
 
         try:

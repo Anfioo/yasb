@@ -17,7 +17,7 @@ if RELEASE_CHANNEL != "stable":
 
 arch_info = detect_architecture()
 if not arch_info:
-    raise RuntimeError("Unsupported or undetected architecture. Cannot build MSI package.")
+    raise RuntimeError("不支持或未检测到的架构，无法构建 MSI 安装包。")
 
 display_arch, msi_arch_suffix = arch_info
 
@@ -65,7 +65,7 @@ directory_table = [
 msi_data = {
     "Directory": directory_table,
     "ProgId": [
-        ("Prog.Id", None, None, "A highly configurable Windows status bar", "IconId", None),
+        ("Prog.Id", None, None, "一款高度可定制的 Windows 状态栏", "IconId", None),
     ],
     "Icon": [
         ("IconId", icon_ico),
@@ -107,7 +107,7 @@ bdist_msi_options = {
     "product_version": BUILD_VERSION,
     "summary_data": {
         "author": "AmN",
-        "comments": "A highly configurable Windows status bar",
+        "comments": "一款高度可定制的 Windows 状态栏",
         "keywords": "windows; statusbar; ricing; customization; topbar; taskbar; yasb",
     },
 }

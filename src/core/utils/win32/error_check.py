@@ -15,4 +15,4 @@ def format_error_message(error_code: int) -> str:
         len(buffer),
         None,
     )
-    return buffer.value.strip() if length else f"Unknown error code: {error_code}"
+    return buffer.value.strip() if length else f"未知错误码：{error_code}"

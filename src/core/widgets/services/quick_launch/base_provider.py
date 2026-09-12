@@ -44,7 +44,7 @@ class BaseProvider(ABC):
     name: str = ""
     display_name: str = ""
     icon: str = ""
-    input_placeholder: str = "Type to search..."
+    input_placeholder: str = "输入以搜索..."
 
     def __init__(self, config: dict | None = None):
         self.config = config or {}

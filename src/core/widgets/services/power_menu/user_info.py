@@ -25,10 +25,10 @@ def get_account_type() -> str:
         groups = win32security.GetTokenInformation(token, win32security.TokenGroups)
         for sid, _ in groups:
             if sid == admin_sid:
-                return "Administrator"
-        return "Standard User"
+                return "管理员"
+        return "标准用户"
     except Exception:
-        return "Standard User"
+        return "标准用户"
 
 
 @cache

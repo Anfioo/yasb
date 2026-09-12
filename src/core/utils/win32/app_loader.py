@@ -236,5 +236,5 @@ class ShortcutResolver:
                 return full_command, None, app_name
         except Exception:
             if warning_callback:
-                warning_callback("Failed to resolve shortcut: {lnk_path}")
+                warning_callback("解析快捷方式失败：{lnk_path}")
             return None, None, None

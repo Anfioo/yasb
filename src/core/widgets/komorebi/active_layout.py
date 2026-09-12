@@ -150,14 +150,14 @@ class ActiveLayoutWidget(BaseWidget):
             return handler
 
         toggle_icons = {
-            "Toggle Tiling": self.config.layout_icons.tiling,
-            "Toggle Monocle": self.config.layout_icons.monocle,
-            "Toggle Pause": self.config.layout_icons.paused,
+            "切换平铺": self.config.layout_icons.tiling,
+            "切换单窗口": self.config.layout_icons.monocle,
+            "切换暂停": self.config.layout_icons.paused,
         }
         toggle_actions = [
-            ("Toggle Tiling", lambda: self._komorebic.toggle("tiling")),
-            ("Toggle Monocle", lambda: self._komorebic.toggle("monocle")),
-            ("Toggle Pause", lambda: self._komorebic.toggle("pause")),
+            ("切换平铺", lambda: self._komorebic.toggle("tiling")),
+            ("切换单窗口", lambda: self._komorebic.toggle("monocle")),
+            ("切换暂停", lambda: self._komorebic.toggle("pause")),
         ]
         for label, func in toggle_actions:
             main_layout.addWidget(create_menu_item(toggle_icons.get(label, ""), label, make_toggle_handler(func)))
@@ -304,16 +304,16 @@ class ActiveLayoutWidget(BaseWidget):
 
     def _get_layout_label_info(self):
         if self._komorebi_state.get("is_paused", False):
-            layout_name = "Paused"
+            layout_name = "已暂停"
             layout_icon = self.config.layout_icons.paused
         elif not self._focused_workspace.get("tile", False):
-            layout_name = "Floating"
+            layout_name = "浮动"
             layout_icon = self.config.layout_icons.floating
         elif self._focused_workspace.get("maximized_window", None):
-            layout_name = "Maximized"
+            layout_name = "最大化"
             layout_icon = self.config.layout_icons.maximized
         elif self._focused_workspace.get("monocle_container", None):
-            layout_name = "Monocle"
+            layout_name = "单窗口"
             layout_icon = self.config.layout_icons.monocle
         else:
             layout_name = self._focused_workspace["layout"]["Default"]

@@ -211,12 +211,12 @@ def _find_codex_command(configured_path: str) -> str:
     found = shutil.which(expanded or "codex")
     if found:
         return found
-    raise RuntimeError("Codex CLI was not found; install it or set codex_path")
+    raise RuntimeError("未找到 Codex CLI；请安装它或设置 codex_path")
 
 
 def _send_message(process: subprocess.Popen[str], message: dict[str, Any]) -> None:
     if process.stdin is None:
-        raise RuntimeError("Codex app-server input is unavailable")
+        raise RuntimeError("Codex 应用服务器输入不可用")
     process.stdin.write(json.dumps(message) + "\n")
     process.stdin.flush()
 
@@ -240,13 +240,13 @@ def _receive_response(messages: queue.Queue[dict[str, Any] | None], response_id:
     while True:
         remaining = deadline - time.monotonic()
         if remaining <= 0:
-            raise RuntimeError("Codex usage request timed out")
+            raise RuntimeError("Codex 用量请求超时")
         try:
             message = messages.get(timeout=remaining)
         except queue.Empty as error:
-            raise RuntimeError("Codex usage request timed out") from error
+            raise RuntimeError("Codex 用量请求超时") from error
         if message is None:
-            raise RuntimeError("Codex app-server closed unexpectedly")
+            raise RuntimeError("Codex 应用服务器意外关闭")
         if message.get("id") == response_id:
             return message
 
@@ -256,10 +256,10 @@ def _response_result(message: dict[str, Any], operation: str) -> dict[str, Any]:
         error: Any = message["error"]
         if isinstance(error, dict):
             error = error.get("message") or error.get("code")
-        raise RuntimeError(f"Codex {operation} failed: {error}")
+        raise RuntimeError(f"Codex {operation} 失败：{error}")
     result = message.get("result")
     if not isinstance(result, dict):
-        raise RuntimeError(f"Codex returned an invalid {operation} response")
+        raise RuntimeError(f"Codex 返回了无效的 {operation} 响应")
     return result
 
 
@@ -282,7 +282,7 @@ def read_rate_limits(codex_path: str, timeout: float) -> dict[str, Any]:
             **process_options,
         )
     except OSError as error:
-        raise RuntimeError(f"Unable to start Codex CLI: {error}") from error
+        raise RuntimeError(f"无法启动 Codex CLI：{error}") from error
 
     messages: queue.Queue[dict[str, Any] | None] = queue.Queue()
     threading.Thread(target=_response_reader, args=(process, messages), daemon=True).start()
@@ -375,13 +375,13 @@ def normalize_rate_limits(payload: dict[str, Any]) -> dict[str, Any]:
     if limits is None and isinstance(payload.get("rateLimits"), dict):
         limits = payload["rateLimits"]
     if limits is None:
-        raise RuntimeError("Codex returned no account rate limits; sign in with ChatGPT")
+        raise RuntimeError("Codex 未返回账户速率限制；请使用 ChatGPT 登录")
 
     credits = limits.get("credits")
     credit_value: str | float | int | None = None
     if isinstance(credits, dict):
         if credits.get("unlimited"):
-            credit_value = "Unlimited"
+            credit_value = "无限"
         elif isinstance(credits.get("balance"), (int, float)):
             credit_value = credits["balance"]
 

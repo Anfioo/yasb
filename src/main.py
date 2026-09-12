@@ -36,7 +36,7 @@ def single_instance_lock(name: str = "yasb_reborn"):
     while True:
         mutex = kernel32.CreateMutexW(None, False, name)
         if not mutex:
-            logging.error("Failed to create mutex.")
+            logging.error("创建互斥锁失败。")
             sys.exit(1)
         if kernel32.GetLastError() != ERROR_ALREADY_EXISTS:
             break
@@ -44,9 +44,9 @@ def single_instance_lock(name: str = "yasb_reborn"):
         kernel32.CloseHandle(mutex)
         if time.monotonic() >= deadline:
             logging.error(
-                "Timeout waiting for previous instance. Aborting start."
+                "等待上一个实例超时，终止启动。"
                 if waiting
-                else "Another instance of the YASB is already running."
+                else "YASB 的另一个实例已在运行。"
             )
             sys.exit(1)
         if not waiting:
@@ -145,7 +145,7 @@ async def main_async(app: YASBApplication):
                 if update_service.is_update_supported():
                     start_update_checker()
             except Exception as e:
-                logging.error("Failed to start auto update service: %s", e)
+                logging.error("启动自动更新服务失败：%s", e)
 
         await app_close_event.wait()
     finally:
@@ -167,7 +167,7 @@ if __name__ == "__main__":
 
     def exception_hook(_exctype: type, value: BaseException, _traceback: TracebackType | None):
         EventService().clear()
-        logging.error("Unhandled exception", exc_info=value)
+        logging.error("未处理的异常", exc_info=value)
         sys.exit(1)
 
     sys.excepthook = exception_hook
@@ -177,5 +177,5 @@ if __name__ == "__main__":
         with single_instance_lock():
             main()
     except Exception:
-        logging.exception("Exception during application startup")
+        logging.exception("应用启动过程中发生异常")
         sys.exit(1)

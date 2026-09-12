@@ -170,7 +170,7 @@ class TaskbarWindowManager(QObject):
 
         try:
             if not hwnd:
-                raise RuntimeError("Qt top-level window handle (hwnd) is required for shell hooks")
+                raise RuntimeError("shell 钩子需要 Qt 顶层窗口句柄（hwnd）")
             self._register_shell_hooks(hwnd)
             self._set_win_event_hooks()
 
@@ -222,14 +222,14 @@ class TaskbarWindowManager(QObject):
         """Register shell hook messages on an existing Qt top-level window handle."""
         try:
             if not hwnd:
-                raise ValueError("Invalid hwnd for shell hook registration")
+                raise ValueError("用于注册 shell 钩子的 hwnd 无效")
 
             if not RegisterShellHookWindow(hwnd):
-                raise RuntimeError("Failed to register shell hook on provided hwnd")
+                raise RuntimeError("无法在提供的 hwnd 上注册 shell 钩子")
 
             self.WM_SHELLHOOKMESSAGE = RegisterWindowMessage("SHELLHOOK")
             if not self.WM_SHELLHOOKMESSAGE:
-                raise RuntimeError("Failed to register SHELLHOOK message")
+                raise RuntimeError("无法注册 SHELLHOOK 消息")
 
             self._shell_hook_registered = True
             self._shell_hook_hwnd = int(hwnd)

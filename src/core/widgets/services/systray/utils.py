@@ -273,25 +273,25 @@ def get_explorer_pid() -> int | None:
         try:
             hwnd_shell = GetShellWindow()
             if hwnd_shell == 0:
-                raise Exception("Failed to get shell window")
+                raise Exception("无法获取 shell 窗口")
             explorer_pid = ct.c_ulong(0)
             thread_id = GetWindowThreadProcessId(hwnd_shell, byref(explorer_pid))
             if not thread_id:
-                raise Exception(f"Wrong thread process ID. Err: {GetLastError()}")
+                raise Exception(f"线程进程 ID 错误。错误码：{GetLastError()}")
             h_process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, explorer_pid.value)
             if not h_process:
-                raise Exception(f"Failed to open process. Err: {GetLastError()}")
+                raise Exception(f"无法打开进程。错误码：{GetLastError()}")
             exe_path_buf = ctypes.create_unicode_buffer(1024)
             size = DWORD(1024)
             if not QueryFullProcessImageNameW(h_process, 0, exe_path_buf, byref(size)):
-                raise Exception(f"Failed to get process image name. Err: {GetLastError()}")
+                raise Exception(f"无法获取进程映像名称。错误码：{GetLastError()}")
             expected_path_buf = ctypes.create_unicode_buffer(1024)
             if not GetSystemWindowsDirectoryW(expected_path_buf, 1024):
-                raise Exception(f"Failed to get system windows directory. Err: {GetLastError()}")
+                raise Exception(f"无法获取系统 Windows 目录。错误码：{GetLastError()}")
             exe_path = exe_path_buf.value.lower()
             expected_path = os.path.join(expected_path_buf.value, "explorer.exe").lower()
             if exe_path != expected_path:
-                raise Exception(f"Unexpected process image name {exe_path}. Expected {expected_path}")
+                raise Exception(f"意外的进程映像名称 {exe_path}，预期为 {expected_path}")
             return explorer_pid.value
         except Exception as e:
             last_error = e
@@ -315,7 +315,7 @@ def get_dll_path() -> str:
         dll_name = "YASBTrayHook_arm64.dll"
     else:
         logger.critical("Unsupported architecture")
-        raise Exception("Unsupported architecture")
+        raise Exception("不支持的架构")
 
     # Check if we're running in a frozen environment
     if IS_FROZEN:

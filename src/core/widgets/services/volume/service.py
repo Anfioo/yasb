@@ -53,7 +53,7 @@ class AudioOutputService(QObject):
         try:
             self._enumerator = AudioUtilities.GetDeviceEnumerator()
         except Exception as e:
-            logging.error("AudioOutputService failed to initialize: %s", e)
+            logging.error("AudioOutputService 初始化失败：%s", e)
 
         self.device_change_requested.connect(self._on_device_change)
         self.volume_change_requested.connect(self._on_volume_change)
@@ -254,7 +254,7 @@ class AudioOutputService(QObject):
             AudioUtilities.SetDefaultDevice(device_id, roles=[ERole.eConsole])
             return True
         except Exception as e:
-            logging.error("Failed to set default audio device: %s", e)
+            logging.error("设置默认音频设备失败：%s", e)
             return False
 
     def get_active_audio_sessions(self, get_app_name_callback=None, format_name_callback=None):

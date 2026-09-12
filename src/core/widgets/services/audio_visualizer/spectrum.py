@@ -116,7 +116,7 @@ class SpectrumSource:
 
     def __init__(self, fft_size: int = FFT_SIZE) -> None:
         if fft_size < 4 or fft_size & (fft_size - 1):
-            raise ValueError("FFT size must be a power of two >= 4")
+            raise ValueError("FFT 大小必须是不小于 4 的 2 的幂")
         self.fft_size = fft_size
         self.bins = fft_size // 2
         self._window = _hann_window(fft_size)

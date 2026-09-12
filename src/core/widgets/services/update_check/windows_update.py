@@ -56,9 +56,9 @@ def check_updates() -> list[dict[str, str]]:
         # When offline, Search("IsInstalled=0") raises a COM Error
         # e.g., pywintypes.com_error: (-2147352567, 'Exception occurred.', ...)
         if isinstance(e, pywintypes.com_error) and e.args and e.args[0] == -2147352567:
-            logging.warning("Offline or network issue while checking Windows updates.")
+            logging.warning("检查 Windows 更新时离线或网络异常。")
         else:
-            logging.exception("Error checking Windows updates")
+            logging.exception("检查 Windows 更新时出错")
         return []
 
 

@@ -243,5 +243,5 @@ class MemoryWorker(QThread):
                 if not self._stop_event.is_set():
                     self.data_ready.emit(data)
             except Exception as e:
-                logging.error("Memory worker error: %s", e)
+                logging.error("内存工作线程错误：%s", e)
             self._stop_event.wait(self._update_interval / 1000)

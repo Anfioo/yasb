@@ -40,7 +40,7 @@ def export_pixmap(pix: QPixmap, *, save: bool, parent: QWidget | None = None) ->
     folder = default_save_dir()
     folder.mkdir(parents=True, exist_ok=True)
     initial = str(folder / f"{datetime.now():%Y%m%d_%H%M%S_%f}.png")
-    path, _ = QFileDialog.getSaveFileName(parent, "Save Screenshot", initial, "PNG Image (*.png);;All Files (*)")
+    path, _ = QFileDialog.getSaveFileName(parent, "保存截图", initial, "PNG 图片 (*.png);;所有文件 (*)")
     if not path:
         return False
     pix.save(path, "PNG")

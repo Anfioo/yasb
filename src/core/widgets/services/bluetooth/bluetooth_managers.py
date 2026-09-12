@@ -35,17 +35,18 @@ logger = logging.getLogger("bluetooth_widget")
 
 
 def _connect_error(action: str, reason: str) -> str:
+    verb = "连接" if action == "connect" else "断开"
     if reason == "cancelled":
-        return f"{action.capitalize()} cancelled"
+        return f"{verb}已取消"
     if reason in ("not_audio_device", "no_ks_controls"):
-        return f"Failed to {action} device (no audio path; use Windows Settings)"
+        return f"{verb}设备失败（无音频通道；请使用 Windows 设置）"
     if reason == "oneshot_failed":
-        return f"Failed to {action} device (audio driver request failed)"
+        return f"{verb}设备失败（音频驱动请求失败）"
     if reason == "timeout" and action == "connect":
-        return "Failed to connect device. Is it powered on and in range?"
+        return "连接设备失败。设备已开机并在范围内吗？"
     if reason == "timeout":
-        return f"Failed to {action} device"
-    return f"Failed to {action} device"
+        return f"{verb}设备失败"
+    return f"{verb}设备失败"
 
 
 class BluetoothManager(QObject):
@@ -350,10 +351,10 @@ class BluetoothManager(QObject):
                     return
                 self._emit_status()
         except Exception as e:
-            logger.error("Bluetooth refresh failed: %s", e)
+            logger.error("蓝牙刷新失败：%s", e)
             if self._alive():
                 self._emit_status()
-                self.refresh_failed.emit(str(e) or "Bluetooth refresh failed")
+                self.refresh_failed.emit(str(e) or "蓝牙刷新失败")
         finally:
             self._refresh_running = False
             if self._alive():
@@ -441,7 +442,7 @@ class BluetoothManager(QObject):
                     self._le_cache.clear()
                     self._clear_device_watchers()
                 self._emit_status()
-                self.refresh_failed.emit("Unable to change Bluetooth power")
+                self.refresh_failed.emit("无法更改蓝牙电源")
                 return
             self._refresh_le_pending = True
             await self._refresh_async()
@@ -452,13 +453,13 @@ class BluetoothManager(QObject):
         action = "connect" if connect else "disconnect"
         device = self._devices.get(address)
         if device is None:
-            self.connection_finished.emit(False, "Device not found", DeviceInfo(name="", address=address))
+            self.connection_finished.emit(False, "未找到设备", DeviceInfo(name="", address=address))
             return
         if self._connect_running:
-            self.connection_finished.emit(False, "Another connection is in progress", device)
+            self.connection_finished.emit(False, "另一个连接正在进行中", device)
             return
         if not device.supports_connect:
-            self.connection_finished.emit(False, "Use Windows Settings to manage this device", device)
+            self.connection_finished.emit(False, "请使用 Windows 设置管理此设备", device)
             return
 
         self._connect_running = True
@@ -492,7 +493,7 @@ class BluetoothManager(QObject):
                 self._set_connected(device, audio)
                 if device.connected:
                     await self._read_battery(device)
-            self._finish_connect(device, True, f"Device {action}ed")
+            self._finish_connect(device, True, "设备已连接" if connect else "设备已断开")
         except Exception as e:
             if self._alive():
                 self._finish_connect(device, False, str(e))

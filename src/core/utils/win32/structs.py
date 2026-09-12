@@ -367,7 +367,7 @@ class DOT11_SSID(ct.Structure):
 
     def set_ssid(self, ssid: bytes) -> None:
         if len(ssid) > 32:
-            raise ValueError("SSID too long (max 32 bytes)")
+            raise ValueError("SSID 过长（最大 32 字节）")
         self.uSSIDLength = len(ssid)
         ct.memmove(self.ucSSID, ssid, self.uSSIDLength)
 

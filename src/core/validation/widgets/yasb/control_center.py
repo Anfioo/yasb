@@ -42,7 +42,7 @@ class QuickActionsSectionConfig(CustomBaseModel):
         seen: set[str] = set()
         for action in v:
             if action.id in seen:
-                raise ValueError(f"Duplicate action id: {action.id}")
+                raise ValueError(f"重复的操作 ID：{action.id}")
             seen.add(action.id)
         return v
 

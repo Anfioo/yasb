@@ -45,7 +45,7 @@ class FileModifiedEventHandler(PatternMatchingEventHandler):
             self._patterns = [self.styles_file, self.config_file, *self._imported_stylesheets]
             self._ensure_watch_paths()
         except Exception:
-            logging.exception("Failed to refresh imported stylesheets list")
+            logging.exception("刷新已导入样式表列表失败")
 
     def set_observer(self, observer) -> None:
         self._observer = observer

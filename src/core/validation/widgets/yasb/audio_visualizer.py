@@ -49,12 +49,12 @@ class AudioVisualizerConfig(CustomBaseModel):
     def _validate_edge_fade(cls, value: int | list[int]) -> int | list[int]:
         if isinstance(value, list):
             if len(value) != 2:
-                raise ValueError("edge_fade must be a single number, or a [left, right] list of exactly two")
+                raise ValueError("edge_fade 必须是单个数字，或包含两个元素的 [left, right] 列表")
             return [max(0, int(value[0])), max(0, int(value[1]))]
         return max(0, int(value))
 
     @model_validator(mode="after")
     def _validate_freq_range(self) -> AudioVisualizerConfig:
         if self.freq_min >= self.freq_max:
-            raise ValueError("freq_min must be less than freq_max")
+            raise ValueError("freq_min 必须小于 freq_max")
         return self

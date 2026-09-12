@@ -103,7 +103,7 @@ def _check(status: int, operation: str) -> None:
     if code == STATUS_SUCCESS:
         return
     if code == STATUS_AUTH_TAG_MISMATCH:
-        raise IntegrityError("Authentication failed: data was modified, truncated, or the key is wrong")
+        raise IntegrityError("认证失败：数据被修改、被截断，或密钥错误")
     raise CryptoError(f"{operation} failed (NTSTATUS 0x{code:08X})")
 
 

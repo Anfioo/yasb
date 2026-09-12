@@ -61,8 +61,8 @@ class ServerMonitorConfig(CustomBaseModel):
             return v
         if isinstance(v[0], str):
             logger.warning(
-                "ServerMonitorConfig: 'servers' format has changed."
-                " Use list of {name: ..., url: ...} instead of plain strings."
+                "ServerMonitorConfig: 'servers' 格式已变更。"
+                " 请使用由 {name: ..., url: ...} 组成的列表，而非纯字符串。"
             )
             return [{"name": s, "url": s} for s in v if s]
         return v

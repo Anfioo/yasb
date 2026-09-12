@@ -134,7 +134,7 @@ class CpuAPI:
                 cls._init_failed = True
                 if not cls._error_logged:
                     logging.warning(
-                        "Failed to open PDH query (status=%s). CPU widget will show default values.", status
+                        "打开 PDH 查询失败 (status=%s)。CPU 组件将显示默认值。", status
                     )
                     cls._error_logged = True
                 return False
@@ -163,7 +163,7 @@ class CpuAPI:
                     cls._init_failed = True
                     if not cls._error_logged:
                         logging.warning(
-                            "Failed to add CPU percent counter (status=%s). PDH counters may be corrupted. Try running 'lodctr /r' as Administrator.",
+                            "添加 CPU 使用率计数器失败 (status=%s)。PDH 计数器可能已损坏。请尝试以管理员身份运行 'lodctr /r'。",
                             status,
                         )
                         cls._error_logged = True
@@ -209,7 +209,7 @@ class CpuAPI:
             cls._cleanup_query()
             cls._init_failed = True
             if not cls._error_logged:
-                logging.error("PDH initialization error: %s", e)
+                logging.error("PDH 初始化错误：%s", e)
                 cls._error_logged = True
             return False
 
@@ -335,7 +335,7 @@ class CpuWorker(QThread):
                 if not self._stop_event.is_set():
                     self.data_ready.emit(data)
             except Exception as e:
-                logging.error("CPU worker error: %s", e)
+                logging.error("CPU 工作线程错误：%s", e)
 
             elapsed_ms = int((time.perf_counter() - started) * 1000)
             sleep_ms = self._update_interval - elapsed_ms

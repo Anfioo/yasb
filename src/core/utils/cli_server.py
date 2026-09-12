@@ -130,13 +130,13 @@ class LogPipeServer:
 
             # Check the handle
             if handle == INVALID_HANDLE_VALUE:
-                logger.error("Log pipe server failed to create handle. Err: %s", GetLastError())
+                logger.error("日志管道服务器创建句柄失败。错误码：%s", GetLastError())
                 time.sleep(1)
                 continue
 
             # Wait for a client to connect
             if not ConnectNamedPipe(handle):
-                logger.error("Log pipe server failed to connect. Err: %s", GetLastError())
+                logger.error("日志管道服务器连接失败。错误码：%s", GetLastError())
                 DisconnectNamedPipe(handle)
                 CloseHandle(handle)
                 time.sleep(0.1)
@@ -160,7 +160,7 @@ class LogPipeServer:
 
                 if msg and msg.get("type") == "PING":
                     if not write_message(handle, {"type": "PONG"}):
-                        logger.error("Write pong failed. Err: %s", GetLastError())
+                        logger.error("写入 pong 失败。错误码：%s", GetLastError())
                         time.sleep(0.1)
                         break
                     time.sleep(1)
@@ -209,7 +209,7 @@ class CliPipeHandler:
 
             logger.debug("CLI server stopped")
         except Exception as e:
-            logger.error("Error stopping CLI server: %s", e)
+            logger.error("停止 CLI 服务器时出错：%s", e)
 
     def _run_server(self):
         """Internal method to run the server loop"""
@@ -227,13 +227,13 @@ class CliPipeHandler:
                 None,
             )
             if handle == INVALID_HANDLE_VALUE:
-                logger.error("CLI pipe server failed to create handle. Err: %s", GetLastError())
+                logger.error("CLI 管道服务器创建句柄失败。错误码：%s", GetLastError())
                 time.sleep(1)
                 continue
 
             # Wait for a client to connect
             if not ConnectNamedPipe(handle):
-                logger.error("Cli handler server failed to connect")
+                logger.error("CLI 处理服务器连接失败")
                 DisconnectNamedPipe(handle)
                 CloseHandle(handle)
                 time.sleep(0.1)
@@ -259,7 +259,7 @@ class CliPipeHandler:
         if command in ["stop", "reload", "show-bar", "hide-bar", "toggle-bar"]:
             success = WriteFile(pipe, b"ACK")
             if not success:
-                logger.error("Write ACK failed. Err: %s", GetLastError())
+                logger.error("写入 ACK 失败。错误码：%s", GetLastError())
                 return None
 
             # Ensure we restart the pipe server if it's a reload command
@@ -297,4 +297,4 @@ class CliPipeHandler:
             self.log_server.start()
 
         except Exception as e:
-            logger.error("Failed to restart cli server: %s", e)
+            logger.error("重启 CLI 服务器失败：%s", e)

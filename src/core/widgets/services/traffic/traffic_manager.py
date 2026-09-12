@@ -49,7 +49,7 @@ class TrafficDataManager:
                 cls._quit_handler_registered = True
 
         except Exception as e:
-            logging.error("Error registering global quit handler: %s", e)
+            logging.error("注册全局退出处理程序时出错：%s", e)
 
     @classmethod
     def destroy(cls):
@@ -62,7 +62,7 @@ class TrafficDataManager:
                     saved_interfaces.append(interface)
 
         except Exception as e:
-            logging.error("Error saving interfaces on quit: %s", e)
+            logging.error("退出时保存接口数据出错：%s", e)
 
     @classmethod
     def get_interface_data_file(cls, interface: str):
@@ -119,30 +119,30 @@ class TrafficDataManager:
     def get_session_duration(cls, interface: str):
         """Get how long ago the session started as a human readable string"""
         if interface not in cls._interface_data:
-            return "just now"
+            return "刚刚"
 
         start_time = cls._interface_data[interface].get("session_start_time", time.time())
         seconds_ago = time.time() - start_time
 
         if seconds_ago < 60:
-            return f"{int(seconds_ago)} sec"
+            return f"{int(seconds_ago)} 秒"
         elif seconds_ago < 3600:  # Less than 1 hour
             minutes = int(seconds_ago // 60)
-            return f"{minutes} min" if minutes > 1 else "1 min"
+            return f"{minutes} 分钟" if minutes > 1 else "1 分钟"
         elif seconds_ago < 86400:  # Less than 1 day
             hours = int(seconds_ago // 3600)
             minutes = int((seconds_ago % 3600) // 60)
             if minutes > 0:
-                return f"{hours}h {minutes}m"
+                return f"{hours}小时{minutes}分"
             else:
-                return f"{hours}h" if hours > 1 else "1h"
+                return f"{hours}小时" if hours > 1 else "1小时"
         else:  # 1 day or more
             days = int(seconds_ago // 86400)
             hours = int((seconds_ago % 86400) // 3600)
             if hours > 0:
-                return f"{days}d {hours}h"
+                return f"{days}天{hours}小时"
             else:
-                return f"{days}d" if days > 1 else "1d"
+                return f"{days}天" if days > 1 else "1天"
 
     @classmethod
     def _load_from_file(cls, interface: str):
@@ -160,7 +160,7 @@ class TrafficDataManager:
                 cls._interface_data[interface]["today_date"] = data.get("today_date", None)
 
             except Exception as e:
-                logging.error("Error loading traffic data for interface %s: %s", interface, e)
+                logging.error("加载接口 %s 的流量数据出错：%s", interface, e)
 
     @classmethod
     def _apply_alignment(cls, text: str, max_length: int, alignment: str) -> str:
@@ -272,7 +272,7 @@ class TrafficDataManager:
             }
 
         except Exception as e:
-            logging.error("Error calculating network data for %s: %s", interface, e)
+            logging.error("计算接口 %s 的网络数据出错：%s", interface, e)
             return None
 
     @classmethod
@@ -300,7 +300,7 @@ class TrafficDataManager:
                 json.dump(data, f, indent=2)
 
         except Exception as e:
-            logging.error("Error saving traffic data for %s: %s", interface, e)
+            logging.error("保存接口 %s 的流量数据出错：%s", interface, e)
 
     @classmethod
     def initialize_today_tracking(cls, interface: str):
@@ -342,7 +342,7 @@ class TrafficDataManager:
                 )
 
         except Exception as e:
-            logging.error("Error initializing today tracking for %s: %s", interface, e)
+            logging.error("初始化接口 %s 的今日统计出错：%s", interface, e)
             if interface in cls._interface_data:
                 cls._interface_data[interface]["today_start_sent"] = 0
                 cls._interface_data[interface]["today_start_recv"] = 0
@@ -363,13 +363,13 @@ class TrafficDataManager:
                     return io_counters[interface]
                 else:
                     logging.warning(
-                        "Interface '%s' not found. Available interfaces: %s",
+                        "未找到接口 '%s'。可用接口：%s",
                         interface,
                         list(io_counters.keys()),
                     )
                     return None
         except Exception as e:
-            logging.error("Error getting IO counters for %s: %s", interface, e)
+            logging.error("获取接口 %s 的 IO 计数器出错：%s", interface, e)
             return None
 
     @classmethod
@@ -421,7 +421,7 @@ class TrafficDataManager:
                 cls._interface_data[interface]["total_bytes_recv"] += today_diff_recv
 
         except Exception as e:
-            logging.error("Error updating today and total tracking for %s: %s", interface, e)
+            logging.error("更新接口 %s 的今日和累计统计出错：%s", interface, e)
 
     @classmethod
     def get_today_totals(cls, interface: str):
@@ -477,7 +477,7 @@ class TrafficDataManager:
             cls.save_interface_data(interface)
 
         except Exception as e:
-            logging.error("Error resetting interface data for %s: %s", interface, e)
+            logging.error("重置接口 %s 的数据出错：%s", interface, e)
 
     @classmethod
     def should_save_data(cls, interface: str):

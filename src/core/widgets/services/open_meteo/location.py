@@ -77,7 +77,7 @@ def save_location(widget_id: str, location: dict[str, Any] | None) -> None:
     data[widget_id] = {
         "latitude": location.get("latitude"),
         "longitude": location.get("longitude"),
-        "name": location.get("name", "Unknown"),
+        "name": location.get("name", "未知"),
         "country": location.get("country", ""),
         "admin1": location.get("admin1", ""),
         "admin2": location.get("admin2", ""),

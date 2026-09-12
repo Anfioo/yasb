@@ -359,7 +359,7 @@ class GpuApi:
         self._h_mem_ded = wintypes.HANDLE()
         self._h_mem_shr = wintypes.HANDLE()
         if pdh.PdhOpenQueryW(None, None, byref(self._query)) != 0:
-            logger.error("GpuApi: PdhOpenQueryW failed")
+            logger.error("GpuApi：PdhOpenQueryW 失败")
             return
         pdh.PdhAddEnglishCounterW(self._query, r"\GPU Engine(*)\Utilization Percentage", None, byref(self._h_util))
         pdh.PdhAddEnglishCounterW(self._query, r"\GPU Adapter Memory(*)\Dedicated Usage", None, byref(self._h_mem_ded))
@@ -551,7 +551,7 @@ class GpuWorker(QThread):
             available = {info["index"] for info in api._luid_info.values()}
             missing = self._gpu_indices - available
             if missing:
-                logger.warning("GpuWorker gpu_index %s not found. Available indices: %s", missing, sorted(available))
+                logger.warning("GpuWorker 未找到 gpu_index %s。可用索引：%s", missing, sorted(available))
             if not (self._gpu_indices & available):
                 return
             while not self._stop_event.is_set():

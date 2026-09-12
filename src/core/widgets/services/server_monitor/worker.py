@@ -52,7 +52,7 @@ class ServerCheckWorker(QThread):
             return
 
         if not self._has_internet():
-            logger.warning("No internet connection detected, skipping server checks")
+            logger.warning("未检测到网络连接，跳过服务器检查")
             server_statuses = [
                 {
                     "url": s["url"],

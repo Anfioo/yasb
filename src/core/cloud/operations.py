@@ -173,7 +173,7 @@ class BackupOperation(Operation):
         if not self._claim():
             self._fail(BUSY_MESSAGE)
             return
-        self.status.emit("Backing up...")
+        self.status.emit("正在备份…")
         # Read here rather than at the call sites, so the window, the CLI and the automatic
         # backup all archive with the same rules without each having to remember to load them.
         worker = PrepareWorker(self._session.master_key, self._note, self._max_total_bytes, load_settings().exclude)
@@ -206,14 +206,14 @@ class BackupOperation(Operation):
         # aborts the process rather than raising.
         backup_id = str(ticket.get("backup_id") or "")
         if not backup_id:
-            self._fail("The server did not say where to put this backup.")
+            self._fail("服务器未告知应将此备份上传到何处。")
             return
 
-        self.status.emit("Uploading...")
+        self.status.emit("正在上传…")
         try:
             call = self._api.upload(backup_id, prepared["blob"])
         except OSError as exc:
-            self._fail(f"The snapshot could not be read for upload: {exc.strerror or exc}")
+            self._fail(f"无法读取快照以上传：{exc.strerror or exc}")
             return
         self._send(call, lambda _payload: self._succeed(backup_id))
 
@@ -229,12 +229,12 @@ class RestoreOperation(Operation):
         if not self._claim():
             self._fail(BUSY_MESSAGE)
             return
-        self.status.emit("Downloading...")
+        self.status.emit("正在下载…")
         blob = self._keep(download_blob())
         self._download(self._snapshot_id, blob, lambda: self._apply(blob))
 
     def _apply(self, blob: Path) -> None:
-        self.status.emit("Restoring...")
+        self.status.emit("正在恢复…")
         worker = DecryptWorker(blob, self._session.master_key, restore_config)
         worker.done.connect(self._succeed)
         worker.failed.connect(self._fail)
@@ -251,12 +251,12 @@ class SaveCopyOperation(Operation):
         self._target = target
 
     def start(self) -> None:
-        self.status.emit("Downloading...")
+        self.status.emit("正在下载…")
         blob = self._keep(download_blob())
         self._download(self._snapshot_id, blob, lambda: self._apply(blob))
 
     def _apply(self, blob: Path) -> None:
-        self.status.emit("Saving...")
+        self.status.emit("正在保存…")
         worker = DecryptWorker(blob, self._session.master_key, unpack_into(self._target))
         worker.done.connect(self._succeed)
         worker.failed.connect(self._fail)
@@ -297,7 +297,7 @@ class Operations(QObject):
 
     def backup(self, note: str) -> None:
         if self._session.master_key is None or self._account is None:
-            self.failed.emit("Not ready yet. Wait for your account to finish loading and try again.")
+            self.failed.emit("尚未就绪。请等待账户加载完成后再试。")
             return
         # No fallback to the device name: the row already falls back to it for display.
         note = note.strip()[:NOTE_MAX_LENGTH]

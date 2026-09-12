@@ -110,7 +110,7 @@ class ObsWebSocketClient:
     def call(self, request_type: str, request_data: dict | None = None, timeout: float = 5.0) -> dict:
         """Send request and wait for response."""
         if not self.connected:
-            raise RuntimeError("Not connected")
+            raise RuntimeError("未连接")
 
         request_id = str(uuid.uuid4())
         event = threading.Event()
@@ -127,12 +127,12 @@ class ObsWebSocketClient:
         except Exception as e:
             with self._lock:
                 self._pending.pop(request_id, None)
-            raise RuntimeError(f"Send failed: {e}") from e
+            raise RuntimeError(f"发送失败：{e}") from e
 
         if not event.wait(timeout):
             with self._lock:
                 self._pending.pop(request_id, None)
-            raise RuntimeError(f"Timeout: {request_type}")
+            raise RuntimeError(f"超时：{request_type}")
 
         with self._lock:
             self._pending.pop(request_id, None)
@@ -140,7 +140,7 @@ class ObsWebSocketClient:
 
         status = response.get("requestStatus", {})
         if not status.get("result", False):
-            raise RuntimeError(f"Request failed: {status.get('comment', 'Unknown')}")
+            raise RuntimeError(f"请求失败：{status.get('comment', '未知')}")
 
         return response.get("responseData", {})
 

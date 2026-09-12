@@ -195,7 +195,7 @@ def close_application(hwnd: int, force: bool = False):
     """
     try:
         if not hwnd or hwnd == 0:
-            logging.warning("Invalid HWND: %s", hwnd)
+            logging.warning("无效的 HWND：%s", hwnd)
             return
 
         # Resolve a better target: prefer GA_ROOTOWNER, then GA_ROOT
@@ -217,11 +217,11 @@ def close_application(hwnd: int, force: bool = False):
             try:
                 _, process_id = win32process.GetWindowThreadProcessId(hwnd)
             except Exception as e:
-                logging.error("Failed to get process ID for HWND %s: %s", hwnd, e)
+                logging.error("获取 HWND %s 的进程 ID 失败：%s", hwnd, e)
                 return
 
             if not process_id:
-                logging.warning("No process ID found for HWND: %s", hwnd)
+                logging.warning("未找到 HWND 的进程 ID：%s", hwnd)
                 return
 
             # Try forced EndTask first (Windows shell approach)
@@ -233,7 +233,7 @@ def close_application(hwnd: int, force: bool = False):
                     logging.info("Successfully ended task via forced EndTask for HWND: %s", hwnd)
                     return
             except Exception as et_ex:
-                logging.warning("Forced EndTask failed for HWND %s: %s", target_hwnd, et_ex)
+                logging.warning("强制 EndTask 失败，HWND %s：%s", target_hwnd, et_ex)
 
             # Fallback: Direct process termination
             PROCESS_TERMINATE = 0x0001
@@ -241,7 +241,7 @@ def close_application(hwnd: int, force: bool = False):
                 # Open process handle with terminate rights
                 process_handle = k32.OpenProcess(PROCESS_TERMINATE, False, process_id)
                 if not process_handle:
-                    logging.error("Failed to open process %s for termination", process_id)
+                    logging.error("打开进程 %s 以终止失败", process_id)
                     return
 
                 # Terminate the process with exit code 1
@@ -249,13 +249,13 @@ def close_application(hwnd: int, force: bool = False):
                 if terminated:
                     logging.info("Successfully terminated process %s for HWND: %s", process_id, hwnd)
                 else:
-                    logging.warning("TerminateProcess returned False for process %s", process_id)
+                    logging.warning("TerminateProcess 对进程 %s 返回 False", process_id)
 
                 # Close the process handle
                 k32.CloseHandle(process_handle)
 
             except Exception as term_ex:
-                logging.error("Failed to terminate process %s: %s", process_id, term_ex)
+                logging.error("终止进程 %s 失败：%s", process_id, term_ex)
 
         else:
             # Graceful close path
@@ -289,9 +289,9 @@ def close_application(hwnd: int, force: bool = False):
             try:
                 endtask_ok = u32.EndTask(int(target_hwnd), False, False)
                 if not endtask_ok:
-                    logging.warning("EndTask failed for HWND: %s", target_hwnd)
+                    logging.warning("EndTask 失败，HWND：%s", target_hwnd)
             except Exception as et_ex:
-                logging.warning("EndTask unavailable/failed for HWND %s: %s", target_hwnd, et_ex)
+                logging.warning("EndTask 不可用或失败，HWND %s：%s", target_hwnd, et_ex)
 
     except Exception as e:
-        logging.error("Failed to close window %s: %s", hwnd, e)
+        logging.error("关闭窗口 %s 失败：%s", hwnd, e)

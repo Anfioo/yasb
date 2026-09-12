@@ -41,13 +41,13 @@ class BarDimensions(CustomBaseModel):
     def validate_width(cls, v: str | int) -> str | int:
         if isinstance(v, int):
             if v < 0:
-                raise ValueError("Width must be non-negative")
+                raise ValueError("宽度不能为负数")
             return v
         if v == "auto":
             return v
         if v.endswith("%") and v[:-1].isdigit():
             return v
-        raise ValueError("Width must be an integer, 'auto', or a percentage string (e.g. '100%')")
+        raise ValueError("宽度必须是整数、'auto'，或百分比字符串（例如 '100%'）")
 
 
 class BarPadding(CustomBaseModel):

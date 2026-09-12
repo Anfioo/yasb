@@ -49,7 +49,7 @@ class GlucoseMonitorWorker(QThread):
                 status = response.status
 
             if status != 200:
-                raise RuntimeError(f"Response status code should be 200 but got {status}")
+                raise RuntimeError(f"响应状态码应为 200，实际为 {status}")
 
             resp_json = data[0]
             self.status_updated.emit(
@@ -95,7 +95,7 @@ class GlucoseMonitor(BaseWidget):
         }
 
         if not (convert_sgv := self._available_sgv_measurement_units.get(self.config.sgv_measurement_units)):
-            raise ValueError("Wrong measurement units")
+            raise ValueError("错误的计量单位")
         self._convert_sgv = convert_sgv
 
         self._icon_path = os.path.join(SCRIPT_PATH, "assets", "images", "app_transparent.png")

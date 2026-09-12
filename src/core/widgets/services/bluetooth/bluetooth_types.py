@@ -138,7 +138,7 @@ class DeviceInfo:
     major_class: int = 0
     device_type: DeviceType = DeviceType.GENERIC
     icon: str = ""
-    status_text: str = "Not connected"
+    status_text: str = "未连接"
     battery: int | None = None
     is_le: bool = False
     profiles: list[str] = field(default_factory=list)

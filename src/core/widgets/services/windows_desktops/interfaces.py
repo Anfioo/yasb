@@ -875,8 +875,8 @@ def resolve_tier() -> int:
 
     tried = ", ".join(str(MANAGER_GUID_BY_TIER[t]) for t in PROBE_ORDER)
     raise VirtualDesktopUnsupportedError(
-        f"No supported IVirtualDesktopManagerInternal interface found on build {build}. "
-        f"Tried: {tried}. Please report this at https://github.com/amnweb/yasb/issues"
+        f"在 build {build} 上未找到受支持的 IVirtualDesktopManagerInternal 接口。"
+        f"已尝试：{tried}。请前往 https://github.com/amnweb/yasb/issues 报告此问题"
     )
 
 

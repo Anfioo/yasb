@@ -367,7 +367,7 @@ class HourlyDataLineWidget(QFrame):
             x_offset = i * self.hour_point_spacing
             # Time text
             if self.current_idx is not None and i == self.current_idx:
-                time_text = "Now"
+                time_text = "现在"
             else:
                 if self.config.get("time_format", "24h") == "24h":
                     time_text = self.hourly_data[i].time.strftime("%H:%M")

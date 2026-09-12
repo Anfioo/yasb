@@ -126,7 +126,7 @@ class CopilotDataManager:
         """Fetch data from GitHub API."""
         cls = CopilotDataManager
         if not cls._token:
-            cls._data = CopilotUsageData(error="Token not configured")
+            cls._data = CopilotUsageData(error="未配置令牌")
             self._notify_callbacks()
             return
 
@@ -165,15 +165,15 @@ class CopilotDataManager:
                 usage_data.last_updated = now
                 cls._data = usage_data
             elif status_code == 403:
-                cls._data = CopilotUsageData(error="Access denied. Token needs Plan/Billing permission.")
+                cls._data = CopilotUsageData(error="访问被拒绝。令牌需要套餐/账单权限。")
             elif status_code == 404:
-                cls._data = CopilotUsageData(error="Requires Copilot Pro/Pro+/Max subscription.")
+                cls._data = CopilotUsageData(error="需要 Copilot Pro/Pro+/Max 订阅。")
             else:
-                cls._data = CopilotUsageData(error=f"API error: {status_code}")
+                cls._data = CopilotUsageData(error=f"API 错误：{status_code}")
 
         except Exception:
-            logging.exception("Error fetching Copilot data")
-            cls._data = CopilotUsageData(error="Unexpected error occurred")
+            logging.exception("获取 Copilot 数据时出错")
+            cls._data = CopilotUsageData(error="发生意外错误")
 
         self._notify_callbacks()
 
@@ -185,8 +185,8 @@ class CopilotDataManager:
         if status_code == 200 and data:
             return data.get("login"), None
         if status_code == 401:
-            return None, "Invalid token"
-        return None, f"Failed to get user: {status_code}"
+            return None, "令牌无效"
+        return None, f"获取用户失败：{status_code}"
 
     def _make_request(self, url: str, timeout: int = DEFAULT_TIMEOUT) -> tuple[dict[str, Any] | None, int, str | None]:
         """Make an HTTP GET request."""
@@ -207,14 +207,14 @@ class CopilotDataManager:
         except urllib.error.URLError as e:
             reason = str(e.reason).lower()
             if "timed out" in reason:
-                error = "Request timed out"
+                error = "请求超时"
             elif "getaddrinfo" in reason or "name or service not known" in reason or "no such host" in reason:
-                error = "No internet connection"
+                error = "无网络连接"
             else:
-                error = "Connection failed"
+                error = "连接失败"
             return None, 0, error
         except json.JSONDecodeError:
-            return None, 0, "Invalid JSON response"
+            return None, 0, "JSON 响应无效"
         except Exception as e:
             return None, 0, str(e)
 
@@ -226,7 +226,7 @@ class CopilotDataManager:
             if "copilot" not in item.get("product", "").lower():
                 continue
 
-            model = item.get("model") or "Unknown"
+            model = item.get("model") or "未知"
             quantity = float(item.get("grossQuantity") or item.get("netQuantity") or 0.0)
             amount = float(item.get("grossAmount", 0.0))
 
@@ -303,4 +303,4 @@ class CopilotDataManager:
             try:
                 callback(cls._data)
             except Exception:
-                logging.exception("Error in Copilot data callback")
+                logging.exception("Copilot 数据回调出错")
