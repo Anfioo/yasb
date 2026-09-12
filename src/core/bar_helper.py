@@ -419,9 +419,9 @@ class AutoHideManager(QObject):
 class LockIndicatorWidget(QWidget):
     """智能自动隐藏模式下的锁图标指示器，带环形解锁进度条。
 
-    窗口本身覆盖整个栏的宽度（透明），仅在中心绘制锁图标和进度环，
-    这样鼠标在栏的任意位置悬停都能触发解锁。
-    注意：不使用 setWindowOpacity，否则全透明时 Windows 会穿透鼠标事件。
+    窗口位于栏的中心区域（小宽度），仅在中心绘制锁图标和进度环。
+    只有悬停在中心这块区域才会触发解锁/锁定交互。
+    注意：不使用 setWindowOpacity（全透明时 Windows 会穿透鼠标事件），
     透明度通过绘制颜色的 alpha 通道控制。
     """
 
@@ -591,18 +591,22 @@ class SmartAutoHideManager(QObject):
         QTimer.singleShot(100, self._enter_locked_state)
 
     def _indicator_geometry(self) -> QRect:
-        """计算指示器应处的几何位置（与栏同宽同高，位于栏的位置）。"""
+        """计算指示器几何位置：仅中心一小块区域（图标+边距），居中于栏。"""
         screen_geo = self.bar_widget.screen().geometry()
         bar_geo = self.bar_widget.geometry()
         alignment = self.bar_widget._alignment
         height = self.bar_widget._dimensions["height"]
+        # 检测/显示区域宽度：图标尺寸 + 20px 边距，便于悬停
+        detect_width = self._config.get("indicator_size", 28) + 20
 
         if alignment["position"] == "top":
             y = screen_geo.y()
         else:
             y = screen_geo.y() + screen_geo.height() - height
 
-        return QRect(bar_geo.x(), y, bar_geo.width(), height)
+        # 水平居中于栏
+        x = bar_geo.x() + (bar_geo.width() - detect_width) // 2
+        return QRect(x, y, detect_width, height)
 
     def _setup_detection_zone(self):
         """设置顶部 1px 检测区的位置和大小（与普通自动隐藏一致）。"""
