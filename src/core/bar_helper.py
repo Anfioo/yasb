@@ -537,6 +537,8 @@ class SmartAutoHideManager(QObject):
         self._hide_timer = None     # 解锁后鼠标离开的短延迟隐藏（与普通自动隐藏一致 600ms）
         self._autohide_delay = 600
         self._lock_timer = None     # 解锁隐藏后重新锁定的倒计时
+        self._lock_progress_timer = None  # 解锁可见态悬停空白处锁定的进度计时器
+        self._lock_progress_elapsed = 0
 
     def setup(self):
         """初始化智能自动隐藏。"""
@@ -565,6 +567,11 @@ class SmartAutoHideManager(QObject):
         self._lock_timer = QTimer(self.bar_widget)
         self._lock_timer.setSingleShot(True)
         self._lock_timer.timeout.connect(self._lock)
+
+        # 悬停锁定进度计时器（解锁可见 → 悬停空白处直接锁定）
+        self._lock_progress_timer = QTimer(self.bar_widget)
+        self._lock_progress_timer.setInterval(self._unlock_interval)
+        self._lock_progress_timer.timeout.connect(self._on_lock_progress_tick)
 
         # 安装栏和栏框架的事件过滤器（框架覆盖栏的全部区域，用于捕获双击空白处）
         self.bar_widget.installEventFilter(self)
@@ -625,6 +632,9 @@ class SmartAutoHideManager(QObject):
             self._hide_timer.stop()
         if self._lock_timer:
             self._lock_timer.stop()
+        if self._lock_progress_timer:
+            self._lock_progress_timer.stop()
+        self._lock_progress_elapsed = 0
 
         # 隐藏检测区
         if self._detection_zone:
@@ -660,6 +670,11 @@ class SmartAutoHideManager(QObject):
         # 停止锁定倒计时
         if self._lock_timer:
             self._lock_timer.stop()
+
+        # 停止悬停锁定进度
+        if self._lock_progress_timer:
+            self._lock_progress_timer.stop()
+        self._lock_progress_elapsed = 0
 
         # 显示栏（与普通自动隐藏一致的动画）
         anim_mgr = getattr(self.bar_widget, "_animation_manager", None)
@@ -767,6 +782,56 @@ class SmartAutoHideManager(QObject):
             self._unlock_timer.stop()
             self._unlock()
 
+    def _is_cursor_on_empty_area(self) -> bool:
+        """检查鼠标是否在栏的空白区域（不在子组件上）。"""
+        cursor_pos = QCursor.pos()
+        widget_at = QApplication.widgetAt(cursor_pos)
+        if widget_at is None:
+            return False
+        # 鼠标在栏本身或栏框架上（非子组件）即为空白区域
+        bar_frame = getattr(self.bar_widget, "_bar_frame", None)
+        return widget_at is self.bar_widget or (bar_frame is not None and widget_at is bar_frame)
+
+    def _on_lock_progress_tick(self):
+        """悬停锁定进度计时器回调（解锁可见态）。"""
+        if not self._config.get("hover_to_lock", True):
+            self._lock_progress_timer.stop()
+            return
+
+        if self._is_cursor_on_empty_area():
+            self._lock_progress_elapsed += self._unlock_interval
+        else:
+            # 鼠标移到了子组件上，重置进度
+            self._lock_progress_elapsed = 0
+
+        duration = self._config.get("lock_hover_duration", 800)
+        progress = self._lock_progress_elapsed / duration
+
+        # 显示指示器作为视觉反馈（覆盖在栏上方，透明背景）
+        if self._indicator and progress > 0:
+            self._indicator.set_hover_visible(True)
+            self._indicator.set_progress(progress)
+            if not self._indicator.isVisible():
+                self._indicator.setGeometry(self._indicator_geometry())
+                self._indicator.show()
+                self._indicator.raise_()
+
+        if progress >= 1.0:
+            self._lock_progress_timer.stop()
+            self._lock_progress_elapsed = 0
+            logging.debug("智能自动隐藏：悬停空白处进度满，锁定")
+            self._enter_locked_state()
+
+    def _stop_lock_progress(self):
+        """停止悬停锁定进度并隐藏指示器覆盖层。"""
+        if self._lock_progress_timer:
+            self._lock_progress_timer.stop()
+        self._lock_progress_elapsed = 0
+        if self._indicator and not self._is_locked:
+            self._indicator.hide()
+            self._indicator.reset_progress()
+            self._indicator.set_hover_visible(False)
+
     def eventFilter(self, watched, event):
         """事件过滤器：处理指示器和栏的鼠标进入/离开。"""
         if not self._is_enabled:
@@ -799,13 +864,22 @@ class SmartAutoHideManager(QObject):
             # 双击空白处立即隐藏
             if event.type() == QEvent.Type.MouseButtonDblClick:
                 if self._config.get("double_click_to_hide", True):
+                    self._stop_lock_progress()
                     if self._hide_timer:
                         self._hide_timer.stop()
                     logging.debug("智能自动隐藏：双击空白处，立即隐藏")
                     self._on_hide_timer()
                     return True
-            # 鼠标离开栏：启动短延迟隐藏
+            # 鼠标进入栏：启动悬停锁定进度（如果启用）
+            elif event.type() == QEvent.Type.Enter and watched is self.bar_widget:
+                if self._hide_timer:
+                    self._hide_timer.stop()
+                if self._config.get("hover_to_lock", True):
+                    self._lock_progress_elapsed = 0
+                    self._lock_progress_timer.start()
+            # 鼠标离开栏：停止悬停锁定进度，启动短延迟隐藏
             elif event.type() == QEvent.Type.Leave and watched is self.bar_widget:
+                self._stop_lock_progress()
                 cursor_pos = QCursor.pos()
                 bar_geo = self.bar_widget.geometry()
                 # 检查鼠标是否仍在栏附近的安全区域
@@ -815,10 +889,6 @@ class SmartAutoHideManager(QObject):
                         self._lock_timer.stop()
                     if self._hide_timer:
                         self._hide_timer.start(self._autohide_delay)
-            elif event.type() == QEvent.Type.Enter and watched is self.bar_widget:
-                # 鼠标回到栏上，取消短延迟隐藏
-                if self._hide_timer:
-                    self._hide_timer.stop()
 
         return False
 
@@ -861,6 +931,8 @@ class SmartAutoHideManager(QObject):
             self._hide_timer.stop()
         if self._lock_timer:
             self._lock_timer.stop()
+        if self._lock_progress_timer:
+            self._lock_progress_timer.stop()
         if self._indicator:
             self._indicator.hide()
             self._indicator.deleteLater()

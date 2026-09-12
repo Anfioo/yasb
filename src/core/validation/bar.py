@@ -37,6 +37,8 @@ class SmartAutoHideConfig(CustomBaseModel):
     indicator_opacity: float = Field(default=0.6, ge=0.1, le=1.0, description="锁定时指示器不透明度")
     double_click_to_hide: bool = Field(default=True, description="双击栏空白处立即隐藏")
     indicator_auto_hide: bool = Field(default=True, description="锁定时锁图标仅在鼠标悬停栏区域时显示")
+    hover_to_lock: bool = Field(default=True, description="解锁状态下悬停栏空白处一段时间后直接锁定")
+    lock_hover_duration: int = Field(default=800, ge=100, le=5000, description="悬停锁定所需毫秒数")
 
 
 class BarWindowFlags(CustomBaseModel):
