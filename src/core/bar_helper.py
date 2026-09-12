@@ -428,6 +428,7 @@ class LockIndicatorWidget(QWidget):
         self._config = config
         self._progress = 0.0  # 0.0 ~ 1.0
         self._unlocking = False
+        self._hover_visible = False  # 鼠标悬停时才显示锁图标
 
         self.setWindowFlags(
             Qt.WindowType.Tool
@@ -438,6 +439,12 @@ class LockIndicatorWidget(QWidget):
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setWindowOpacity(config.get("indicator_opacity", 0.6))
+
+    def set_hover_visible(self, visible: bool):
+        """设置鼠标悬停时是否显示锁图标。"""
+        if self._hover_visible != visible:
+            self._hover_visible = visible
+            self.update()
 
     def set_progress(self, value: float):
         """设置解锁进度 (0.0~1.0)，触发重绘。"""
@@ -452,6 +459,10 @@ class LockIndicatorWidget(QWidget):
         self.update()
 
     def paintEvent(self, event):
+        # 未悬停且无进度时不绘制任何内容（完全透明，仅保留鼠标检测区域）
+        if not self._hover_visible and self._progress == 0:
+            return
+
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
@@ -607,12 +618,14 @@ class SmartAutoHideManager(QObject):
         if self._detection_zone:
             self._detection_zone.hide()
 
-        # 隐藏栏并显示指示器
+        # 隐藏栏并显示指示器（指示器默认隐藏锁图标，鼠标悬停时才显示）
         self.bar_widget.hide()
         if self._indicator:
             geo = self._indicator_geometry()
             self._indicator.setGeometry(geo)
             self._indicator.reset_progress()
+            if self._config.get("indicator_auto_hide", True):
+                self._indicator.set_hover_visible(False)
             self._indicator.show()
             self._indicator.raise_()
 
@@ -747,18 +760,22 @@ class SmartAutoHideManager(QObject):
         if not self._is_enabled:
             return False
 
-        # 指示器的鼠标进入：开始解锁进度
-        if watched is self._indicator:
+        # 指示器的鼠标事件（锁定态）
+        if watched is self._indicator and self._is_locked:
             if event.type() == QEvent.Type.Enter:
-                if self._is_locked:
-                    self._unlock_elapsed = 0
-                    self._unlock_timer.start()
+                # 鼠标进入：显示锁图标，开始解锁进度
+                if self._indicator:
+                    self._indicator.set_hover_visible(True)
+                self._unlock_elapsed = 0
+                self._unlock_timer.start()
             elif event.type() == QEvent.Type.Leave:
-                if self._is_locked:
-                    self._unlock_timer.stop()
-                    self._unlock_elapsed = 0
-                    if self._indicator:
-                        self._indicator.reset_progress()
+                # 鼠标离开：停止进度，隐藏锁图标
+                self._unlock_timer.stop()
+                self._unlock_elapsed = 0
+                if self._indicator:
+                    self._indicator.reset_progress()
+                    if self._config.get("indicator_auto_hide", True):
+                        self._indicator.set_hover_visible(False)
 
         # 栏和栏框架的鼠标事件（解锁可见态）
         bar_frame = getattr(self.bar_widget, "_bar_frame", None)

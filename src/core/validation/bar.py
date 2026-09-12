@@ -36,6 +36,7 @@ class SmartAutoHideConfig(CustomBaseModel):
     progress_thickness: int = Field(default=3, ge=1, le=8, description="进度环粗细（像素）")
     indicator_opacity: float = Field(default=0.6, ge=0.1, le=1.0, description="锁定时指示器不透明度")
     double_click_to_hide: bool = Field(default=True, description="双击栏空白处立即隐藏")
+    indicator_auto_hide: bool = Field(default=True, description="锁定时锁图标仅在鼠标悬停栏区域时显示")
 
 
 class BarWindowFlags(CustomBaseModel):
