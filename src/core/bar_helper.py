@@ -852,7 +852,11 @@ class SmartAutoHideManager(QObject):
             self._unlock()
 
     def _is_cursor_on_empty_area(self) -> bool:
-        """检查鼠标是否在栏的空白区域（不在子组件上）。"""
+        """检查鼠标是否在栏的空白区域（不在子组件上）。
+
+        实际组件在 _add_widgets 中会被设置 parent_layout_type 属性；
+        空白区域的容器（layout_container / bar_frame 等）没有该属性。
+        """
         cursor_pos = QCursor.pos()
         # 先检查是否在栏的几何范围内
         if not self.bar_widget.geometry().contains(cursor_pos):
@@ -860,8 +864,16 @@ class SmartAutoHideManager(QObject):
         widget_at = QApplication.widgetAt(cursor_pos)
         if widget_at is None:
             return True
-        bar_frame = getattr(self.bar_widget, "_bar_frame", None)
-        return widget_at is self.bar_widget or (bar_frame is not None and widget_at is bar_frame)
+        # 沿父链向上查找：遇到带 parent_layout_type 的实际组件则非空白；
+        # 到达 bar_widget 仍未找到则为空白区域
+        p = widget_at
+        while p:
+            if hasattr(p, "parent_layout_type"):
+                return False
+            if p is self.bar_widget:
+                break
+            p = p.parent()
+        return True
 
     def _progress_bar_geometry(self) -> QRect:
         """计算底部锁定进度条的位置：与栏同宽，3px 高，贴在栏底部。"""
